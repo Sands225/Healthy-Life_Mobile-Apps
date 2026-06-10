@@ -20,33 +20,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthylife.data.DummyData
 import com.example.healthylife.ui.theme.*
 
 @Composable
 fun NutritionScreen(padding: PaddingValues) {
 
     var search by remember { mutableStateOf("") }
-    var selectedMeal by remember { mutableStateOf("Medium") }
-
-    val recentFoods = listOf(
-        Triple("Nasi Goreng",  "450 kcal", CardOrange),
-        Triple("Mie Gacoan",   "380 kcal", CardPink),
-        Triple("Ayam Geprek",  "520 kcal", CardYellow),
-        Triple("Kopi Kenangan","120 kcal", SkyBlue)
-    )
+    var selectedMeal by remember { mutableStateOf("Semua") }
 
     val mealTypes = listOf(
-        Triple("🥗", "Light",  "~250 kcal"),
-        Triple("🍛", "Medium", "~500 kcal"),
-        Triple("🍔", "Heavy",  "~800 kcal")
+        Triple("🥗", "Semua",  ""),
+        Triple("🥣", "Breakfast", ""),
+        Triple("🍛", "Lunch", ""),
+        Triple("🍽️", "Dinner", ""),
+        Triple("🍎", "Snack", "")
     )
+
+    val filteredFoods = DummyData.foods.filter { food ->
+        val matchMeal = selectedMeal == "Semua" || food.mealType == selectedMeal
+        val matchSearch = search.isEmpty() || food.name.contains(search, ignoreCase = true)
+        matchMeal && matchSearch
+    }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(padding),
-        contentPadding = PaddingValues(bottom = 24.dp)
+        contentPadding = PaddingValues(bottom = 32.dp)
     ) {
 
         // ── Header ────────────────────────────────────────────────────────────
@@ -55,13 +57,13 @@ fun NutritionScreen(padding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFF1A0A18), DeepNavy))
+                        Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
                     )
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
                 Column {
-                    Text("Nutrition", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text("Track your daily intake", color = TextSecondary, fontSize = 13.sp)
+                    Text("Nutrisi", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("Pantau asupan harianmu", color = TextSecondary, fontSize = 13.sp)
                 }
             }
         }
@@ -83,17 +85,31 @@ fun NutritionScreen(padding: PaddingValues) {
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Column {
-                            Text("Calories Today", color = TextSecondary, fontSize = 13.sp)
+                            Text("Kalori Hari Ini", color = TextSecondary, fontSize = 13.sp)
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text("1,200", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 28.sp)
-                                Text(" / 2,000 kcal", color = TextSecondary, fontSize = 13.sp)
+                                Text(
+                                    "${DummyData.totalCaloriesToday}",
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 30.sp
+                                )
+                                Text(
+                                    " / ${DummyData.currentUser.targetCalories} kcal",
+                                    color = TextSecondary,
+                                    fontSize = 13.sp
+                                )
                             }
                         }
-                        Text("60%", color = HealthGreen, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(
+                            "${((DummyData.totalCaloriesToday.toFloat() / DummyData.currentUser.targetCalories) * 100).toInt()}%",
+                            color = HealthGreen,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
+                        )
                     }
                     Spacer(Modifier.height(12.dp))
                     LinearProgressIndicator(
-                        progress = { 0.6f },
+                        progress = { (DummyData.totalCaloriesToday.toFloat() / DummyData.currentUser.targetCalories).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)
@@ -101,24 +117,25 @@ fun NutritionScreen(padding: PaddingValues) {
                         color = HealthGreen,
                         trackColor = SlateLight
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(14.dp))
+                    // Macros
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        Text("🥦 Carbs 60%", color = TextMuted, fontSize = 11.sp)
-                        Text("🥩 Protein 25%", color = TextMuted, fontSize = 11.sp)
-                        Text("🧈 Fat 15%", color = TextMuted, fontSize = 11.sp)
+                        MacroStat("🥦 Karbo", "${DummyData.totalCarbsToday.toInt()}g", HealthGreen)
+                        MacroStat("🥩 Protein", "${DummyData.totalProteinToday.toInt()}g", AccentTeal)
+                        MacroStat("🧈 Lemak", "${DummyData.totalFatToday.toInt()}g", AccentSage)
                     }
                 }
             }
         }
 
-        // ── Meal Type Selection ───────────────────────────────────────────────
+        // ── Meal Filter ───────────────────────────────────────────────────────
         item {
             Spacer(Modifier.height(24.dp))
             Text(
-                "Meal Type",
+                "Filter Makanan",
                 modifier = Modifier.padding(horizontal = 20.dp),
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -129,34 +146,33 @@ fun NutritionScreen(padding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                mealTypes.forEach { (emoji, label, kcal) ->
+                mealTypes.forEach { (emoji, label, _) ->
                     val isSelected = selectedMeal == label
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) HealthGreen.copy(0.15f) else Slate)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) HealthGreen.copy(0.18f) else Slate)
                             .border(
                                 1.dp,
                                 if (isSelected) HealthGreen else SlateLight,
-                                RoundedCornerShape(16.dp)
+                                RoundedCornerShape(12.dp)
                             )
                             .clickable { selectedMeal = label }
-                            .padding(vertical = 14.dp),
+                            .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(emoji, fontSize = 22.sp)
-                            Spacer(Modifier.height(4.dp))
+                            Text(emoji, fontSize = 18.sp)
+                            Spacer(Modifier.height(3.dp))
                             Text(
                                 label,
-                                color = if (isSelected) HealthGreen else TextPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
+                                color = if (isSelected) HealthGreen else TextSecondary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 9.sp
                             )
-                            Text(kcal, color = TextMuted, fontSize = 10.sp)
                         }
                     }
                 }
@@ -165,17 +181,27 @@ fun NutritionScreen(padding: PaddingValues) {
 
         // ── Search Field ──────────────────────────────────────────────────────
         item {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
-                placeholder = { Text("Search food...", color = TextMuted) },
-                label = { Text("Search Food") },
+                placeholder = { Text("Cari makanan...", color = TextMuted) },
+                label = { Text("Cari Makanan") },
                 leadingIcon = {
                     Icon(Icons.Default.Search, null, tint = TextMuted)
+                },
+                trailingIcon = {
+                    if (search.isNotEmpty()) {
+                        Icon(
+                            Icons.Default.Clear,
+                            null,
+                            tint = TextMuted,
+                            modifier = Modifier.clickable { search = "" }
+                        )
+                    }
                 },
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -192,54 +218,108 @@ fun NutritionScreen(padding: PaddingValues) {
             )
         }
 
-        // ── Recent Items Label ────────────────────────────────────────────────
+        // ── Food List ─────────────────────────────────────────────────────────
         item {
-            Spacer(Modifier.height(24.dp))
-            Text(
-                "Recent Items",
-                modifier = Modifier.padding(horizontal = 20.dp),
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Daftar Makanan",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Text(
+                    "${filteredFoods.size} item",
+                    color = TextMuted,
+                    fontSize = 12.sp
+                )
+            }
             Spacer(Modifier.height(12.dp))
         }
 
-        // ── Recent Food List ──────────────────────────────────────────────────
-        items(recentFoods) { (name, kcal, accentColor) ->
+        if (filteredFoods.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🔍", fontSize = 40.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Text("Makanan tidak ditemukan", color = TextSecondary, fontSize = 14.sp)
+                    }
+                }
+            }
+        }
+
+        items(filteredFoods) { food ->
+            var added by remember { mutableStateOf(false) }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                    .padding(horizontal = 20.dp, vertical = 5.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (added) HealthGreenMuted else Slate
+                ),
+                border = if (added) androidx.compose.foundation.BorderStroke(1.dp, HealthGreen.copy(0.4f)) else null
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
-                            .background(accentColor.copy(alpha = 0.15f)),
+                            .background(HealthGreen.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🍽️", fontSize = 18.sp)
+                        Text(food.emoji, fontSize = 20.sp)
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(name, color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                        Text(kcal, color = accentColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        Text(food.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text(
+                            "${food.calories} kcal  ·  K:${food.carbs.toInt()}g  P:${food.protein.toInt()}g  L:${food.fat.toInt()}g",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                        Text(food.mealType, color = AccentTeal, fontSize = 10.sp, fontWeight = FontWeight.Medium)
                     }
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
-                        tint = HealthGreen,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(if (added) HealthGreen else HealthGreen.copy(0.15f))
+                            .clickable { added = !added },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (added) Icons.Default.Check else Icons.Default.Add,
+                            contentDescription = "Tambah",
+                            tint = if (added) DeepNavy else HealthGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MacroStat(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(label, color = TextMuted, fontSize = 10.sp)
     }
 }

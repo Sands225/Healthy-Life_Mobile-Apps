@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +21,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthylife.data.DummyData
 import com.example.healthylife.ui.theme.*
 
 private data class ActivityItem(
     val emoji: String,
     val name: String,
-    val gradient: List<Color>
+    val caloriesPerMin: Int
 )
 
 @Composable
@@ -32,95 +35,141 @@ fun ExerciseScreen(padding: PaddingValues) {
 
     var duration by remember { mutableFloatStateOf(30f) }
     var selectedActivity by remember { mutableStateOf("Running") }
+    var logSaved by remember { mutableStateOf(false) }
 
     val activities = listOf(
-        ActivityItem("🏃", "Running",  listOf(CardOrange, Color(0xFFFF9500))),
-        ActivityItem("🚶", "Walking",  listOf(HealthGreen, SkyBlue)),
-        ActivityItem("🧘", "Yoga",     listOf(SoftPurple, Color(0xFF7C3AED))),
-        ActivityItem("🏋️", "Gym",     listOf(CardPink,   Color(0xFFC026D3)))
+        ActivityItem("🏃", "Running",  10),
+        ActivityItem("🚶", "Walking",  4),
+        ActivityItem("🧘", "Yoga",     4),
+        ActivityItem("🏋️", "Gym",     9),
+        ActivityItem("🚴", "Cycling",  8),
+        ActivityItem("🏊", "Swimming", 11)
     )
 
-    Column(
+    val selectedItem = activities.find { it.name == selectedActivity } ?: activities[0]
+    val estimatedCals = (duration * selectedItem.caloriesPerMin).toInt()
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(padding)
+            .padding(padding),
+        contentPadding = PaddingValues(bottom = 32.dp)
     ) {
 
         // ── Header ────────────────────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(listOf(Color(0xFF1A0A00), DeepNavy))
-                )
-                .padding(horizontal = 20.dp, vertical = 24.dp)
-        ) {
-            Column {
-                Text("Exercise Log", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text("Track your daily activity", color = TextSecondary, fontSize = 13.sp)
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
+                    )
+                    .padding(horizontal = 20.dp, vertical = 24.dp)
+            ) {
+                Column {
+                    Text("Exercise Log", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("Catat aktivitas harianmu", color = TextSecondary, fontSize = 13.sp)
+                }
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 20.dp)
-        ) {
+        // ── Today's Summary ───────────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(20.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Slate)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    ExerciseStat("⏱️", "${DummyData.todayExerciseMinutes}", "menit", "Durasi Hari Ini", HealthGreen)
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(50.dp)
+                            .background(SlateLight)
+                    )
+                    ExerciseStat("🔥", "${DummyData.todayCaloriesBurned}", "kcal", "Kalori Terbakar", AccentTeal)
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(50.dp)
+                            .background(SlateLight)
+                    )
+                    ExerciseStat("💪", "${DummyData.todayExercises.size}", "sesi", "Sesi Hari Ini", AccentSage)
+                }
+            }
+        }
 
-            // ── Activity Grid ─────────────────────────────────────────────────
+        // ── Activity Selection Grid ────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(24.dp))
             Text(
-                "Choose Activity",
-                color = TextSecondary,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.8.sp
+                "Pilih Aktivitas",
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
             Spacer(Modifier.height(12.dp))
-
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.height(190.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .height(200.dp)
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 userScrollEnabled = false
             ) {
                 items(activities) { item ->
                     val isSelected = selectedActivity == item.name
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(
-                                if (isSelected) Brush.linearGradient(item.gradient)
-                                else Brush.linearGradient(listOf(Slate, Slate))
+                                if (isSelected)
+                                    Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                                else
+                                    Brush.linearGradient(listOf(Slate, Slate))
                             )
                             .then(
-                                if (!isSelected) Modifier.border(1.dp, SlateLight, RoundedCornerShape(16.dp))
+                                if (!isSelected) Modifier.border(1.dp, SlateLight, RoundedCornerShape(14.dp))
                                 else Modifier
                             )
                             .clickable { selectedActivity = item.name }
-                            .padding(horizontal = 16.dp, vertical = 18.dp),
+                            .padding(horizontal = 10.dp, vertical = 14.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(item.emoji, fontSize = 28.sp)
-                            Spacer(Modifier.height(6.dp))
+                            Text(item.emoji, fontSize = 24.sp)
+                            Spacer(Modifier.height(4.dp))
                             Text(
                                 item.name,
-                                color = Color.White,
+                                color = if (isSelected) DeepNavy else TextPrimary,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 13.sp
+                                fontSize = 11.sp
                             )
                         }
                     }
                 }
             }
+        }
 
-            Spacer(Modifier.height(24.dp))
-
-            // ── Duration Card ─────────────────────────────────────────────────
+        // ── Duration Card ─────────────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(20.dp))
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Slate)
             ) {
@@ -130,12 +179,12 @@ fun ExerciseScreen(padding: PaddingValues) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Duration", color = TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("Durasi", color = TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         Text(
-                            "${duration.toInt()} min",
+                            "${duration.toInt()} menit",
                             color = HealthGreen,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize = 22.sp
                         )
                     }
                     Spacer(Modifier.height(8.dp))
@@ -153,19 +202,44 @@ fun ExerciseScreen(padding: PaddingValues) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("15 min", color = TextMuted, fontSize = 11.sp)
-                        Text("120 min", color = TextMuted, fontSize = 11.sp)
+                        Text("15 mnt", color = TextMuted, fontSize = 11.sp)
+                        Text("120 mnt", color = TextMuted, fontSize = 11.sp)
+                    }
+                    // Quick presets
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(15f, 30f, 45f, 60f).forEach { mins ->
+                            val isPreset = duration == mins
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isPreset) HealthGreen else SlateLighter)
+                                    .clickable { duration = mins }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    "${mins.toInt()}m",
+                                    color = if (isPreset) DeepNavy else TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
 
+        // ── Estimated Calories ────────────────────────────────────────────────
+        item {
             Spacer(Modifier.height(14.dp))
-
-            // ── Estimated Calories ────────────────────────────────────────────
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2A1A0A))
+                colors = CardDefaults.cardColors(containerColor = Slate),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AccentTeal.copy(0.3f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -174,34 +248,92 @@ fun ExerciseScreen(padding: PaddingValues) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
-                            .background(CardOrange.copy(alpha = 0.18f)),
+                            .background(AccentTeal.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🔥", fontSize = 20.sp)
+                        Text("🔥", fontSize = 22.sp)
                     }
                     Column {
-                        Text("Estimated Calories", color = TextSecondary, fontSize = 12.sp)
+                        Text("Estimasi Kalori Terbakar", color = TextSecondary, fontSize = 12.sp)
                         Text(
-                            "~${(duration * 5f).toInt()} kcal",
-                            color = CardOrange,
+                            "~$estimatedCals kcal",
+                            color = AccentTeal,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 20.sp
                         )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("${selectedItem.caloriesPerMin} kcal", color = TextMuted, fontSize = 11.sp)
+                        Text("per menit", color = TextMuted, fontSize = 10.sp)
                     }
                 }
             }
+        }
 
-            Spacer(Modifier.weight(1f))
+        // ── Riwayat Olahraga ──────────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(24.dp))
+            Text(
+                "Riwayat Olahraga",
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Spacer(Modifier.height(12.dp))
+        }
 
-            // ── Gradient Save Button ──────────────────────────────────────────
+        items(DummyData.exercises) { ex ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Slate)
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(HealthGreen.copy(0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(ex.emoji, fontSize = 18.sp)
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(ex.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text("${ex.durationMinutes} menit · ${ex.caloriesBurned} kcal", color = TextSecondary, fontSize = 12.sp)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(ex.date, color = TextMuted, fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+
+        // ── Save Button ───────────────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(24.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(listOf(HealthGreen, SkyBlue)))
-                    .clickable { }
+                    .background(
+                        if (logSaved)
+                            Brush.linearGradient(listOf(AccentTeal, HealthGreenDark))
+                        else
+                            Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                    )
+                    .clickable { logSaved = !logSaved }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -209,10 +341,30 @@ fun ExerciseScreen(padding: PaddingValues) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Done, null, tint = DeepNavy)
-                    Text("Save Log", color = DeepNavy, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Icon(
+                        if (logSaved) Icons.Default.CheckCircle else Icons.Default.Done,
+                        null,
+                        tint = DeepNavy
+                    )
+                    Text(
+                        if (logSaved) "Log Tersimpan! ✓" else "Simpan Log Olahraga",
+                        color = DeepNavy,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ExerciseStat(emoji: String, value: String, unit: String, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(emoji, fontSize = 18.sp)
+        Spacer(Modifier.height(4.dp))
+        Text(value, color = color, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(unit, color = color.copy(0.7f), fontSize = 10.sp)
+        Text(label, color = TextMuted, fontSize = 9.sp)
     }
 }

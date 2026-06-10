@@ -1,6 +1,7 @@
 package com.example.healthylife.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,10 +18,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthylife.data.DummyData
 import com.example.healthylife.ui.theme.*
 
 @Composable
 fun ProfileScreen(padding: PaddingValues) {
+
+    val user = DummyData.currentUser
+    val bmi = user.weight / ((user.height / 100f) * (user.height / 100f))
 
     Column(
         modifier = Modifier
@@ -34,7 +39,7 @@ fun ProfileScreen(padding: PaddingValues) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.verticalGradient(listOf(Color(0xFF003D2E), DeepNavy))
+                    Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
                 )
                 .padding(vertical = 36.dp),
             contentAlignment = Alignment.Center
@@ -45,19 +50,34 @@ fun ProfileScreen(padding: PaddingValues) {
                     modifier = Modifier
                         .size(90.dp)
                         .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(HealthGreen, SkyBlue))),
+                        .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "U",
+                        text = user.name.first().toString(),
                         color = DeepNavy,
                         fontWeight = FontWeight.Bold,
                         fontSize = 36.sp
                     )
                 }
                 Spacer(Modifier.height(14.dp))
-                Text("User Name", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text("Healthy Life Member", color = HealthGreen, fontSize = 13.sp)
+                Text(user.name, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text("Healthy Life Member 🌿", color = HealthGreen, fontSize = 13.sp)
+                Spacer(Modifier.height(8.dp))
+                // Streak badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(HealthGreen.copy(0.15f))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        "🔥 ${user.streakDays} Hari Streak",
+                        color = HealthGreen,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
 
@@ -75,24 +95,24 @@ fun ProfileScreen(padding: PaddingValues) {
                 ProfileStatCard(
                     modifier   = Modifier.weight(1f),
                     icon       = Icons.Default.Cake,
-                    label      = "Age",
-                    value      = "20",
-                    unit       = "years",
-                    accentColor = SoftPurple
+                    label      = "Umur",
+                    value      = "${user.age}",
+                    unit       = "tahun",
+                    accentColor = AccentSage
                 )
                 ProfileStatCard(
                     modifier   = Modifier.weight(1f),
                     icon       = Icons.Default.Height,
-                    label      = "Height",
-                    value      = "170",
+                    label      = "Tinggi",
+                    value      = "${user.height.toInt()}",
                     unit       = "cm",
-                    accentColor = SkyBlue
+                    accentColor = AccentTeal
                 )
                 ProfileStatCard(
                     modifier   = Modifier.weight(1f),
                     icon       = Icons.Default.MonitorWeight,
-                    label      = "Weight",
-                    value      = "65",
+                    label      = "Berat",
+                    value      = "${user.weight.toInt()}",
                     unit       = "kg",
                     accentColor = HealthGreen
                 )
@@ -115,20 +135,31 @@ fun ProfileScreen(padding: PaddingValues) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "22.5",
+                            String.format("%.1f", bmi),
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 32.sp
                         )
+                        val bmiLabel = when {
+                            bmi < 18.5 -> "Kurus"
+                            bmi < 25f  -> "Normal ✓"
+                            bmi < 30f  -> "Gemuk"
+                            else       -> "Obesitas"
+                        }
+                        val bmiColor = when {
+                            bmi < 18.5 -> AccentTeal
+                            bmi < 25f  -> HealthGreen
+                            else       -> CardPink
+                        }
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(HealthGreen.copy(alpha = 0.15f))
+                                .background(bmiColor.copy(alpha = 0.15f))
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                "Normal ✓",
-                                color = HealthGreen,
+                                bmiLabel,
+                                color = bmiColor,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp
                             )
@@ -136,7 +167,7 @@ fun ProfileScreen(padding: PaddingValues) {
                     }
                     Spacer(Modifier.height(12.dp))
                     LinearProgressIndicator(
-                        progress = { 0.45f },
+                        progress = { ((bmi - 15f) / 25f).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
@@ -149,9 +180,9 @@ fun ProfileScreen(padding: PaddingValues) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Underweight", color = TextMuted, fontSize = 10.sp)
+                        Text("Kurus", color = TextMuted, fontSize = 10.sp)
                         Text("Normal", color = HealthGreen, fontSize = 10.sp)
-                        Text("Overweight", color = TextMuted, fontSize = 10.sp)
+                        Text("Gemuk", color = TextMuted, fontSize = 10.sp)
                     }
                 }
             }
@@ -163,7 +194,8 @@ fun ProfileScreen(padding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(listOf(HealthGreen, SkyBlue)))
+                    .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
+                    .clickable { }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -172,7 +204,7 @@ fun ProfileScreen(padding: PaddingValues) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(Icons.Default.Edit, null, tint = DeepNavy)
-                    Text("Edit Profile", color = DeepNavy, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Edit Profil", color = DeepNavy, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
