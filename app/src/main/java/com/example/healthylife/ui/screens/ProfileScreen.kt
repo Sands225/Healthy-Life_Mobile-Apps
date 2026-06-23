@@ -44,6 +44,25 @@ fun ProfileScreen(padding: PaddingValues) {
                 .padding(vertical = 36.dp),
             contentAlignment = Alignment.Center
         ) {
+            val isDark = LocalDarkTheme.current
+            val toggleTheme = LocalThemeToggle.current
+
+            IconButton(
+                onClick = toggleTheme,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 20.dp)
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(GlassWhite)
+            ) {
+                Icon(
+                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Ubah Tema",
+                    tint = HealthGreen
+                )
+            }
+
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 // Avatar circle
                 Box(

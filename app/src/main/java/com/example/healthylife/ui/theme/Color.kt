@@ -1,5 +1,7 @@
 package com.example.healthylife.ui.theme
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
 // ── Primary – Forest Green (Monotone) ─────────────────────────────────────────
@@ -8,17 +10,66 @@ val HealthGreenDark  = Color(0xFF1E7A50)   // darker green
 val HealthGreenLight = Color(0xFF4DBF87)   // lighter green
 val HealthGreenMuted = Color(0xFF1A5C3E)   // very dark green for containers
 
-// ── Neutral Green-Tinted Backgrounds ──────────────────────────────────────────
-val DeepNavy    = Color(0xFF0D1A14)   // very dark green-black
-val NavyDark    = Color(0xFF091210)   // darkest background
-val Slate       = Color(0xFF162619)   // card background
-val SlateLight  = Color(0xFF1F3828)   // borders / dividers
-val SlateLighter = Color(0xFF2A4D38)  // subtle borders
+// ── Dark theme defaults ───────────────────────────────────────────────────────
+val DarkDeepNavy      = Color(0xFF0D1A14)
+val DarkNavyDark      = Color(0xFF091210)
+val DarkSlate         = Color(0xFF162619)
+val DarkSlateLight    = Color(0xFF1F3828)
+val DarkSlateLighter  = Color(0xFF2A4D38)
+val DarkTextPrimary   = Color(0xFFE8F5EE)
+val DarkTextSecondary = Color(0xFF7DAA8E)
+val DarkTextMuted     = Color(0xFF4D7A60)
 
-// ── Text ──────────────────────────────────────────────────────────────────────
-val TextPrimary   = Color(0xFFE8F5EE)   // off-white with green tint
-val TextSecondary = Color(0xFF7DAA8E)   // muted green-grey
-val TextMuted     = Color(0xFF4D7A60)   // very muted
+// ── Light theme defaults ──────────────────────────────────────────────────────
+val LightDeepNavy      = Color(0xFFF0F7F3)
+val LightNavyDark      = Color(0xFFE6EFEA)
+val LightSlate         = Color.White
+val LightSlateLight    = Color(0xFFE0EFE7)
+val LightSlateLighter  = Color(0xFFB0CCB9)
+val LightTextPrimary   = Color(0xFF0D1A14)
+val LightTextSecondary = Color(0xFF2A4D38)
+val LightTextMuted     = Color(0xFF5D8A70)
+
+// ── Dynamic Color Getters ─────────────────────────────────────────────────────
+val DeepNavy: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkDeepNavy else LightDeepNavy
+
+val NavyDark: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkNavyDark else LightNavyDark
+
+val Slate: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkSlate else LightSlate
+
+val SlateLight: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkSlateLight else LightSlateLight
+
+val SlateLighter: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkSlateLighter else LightSlateLighter
+
+val TextPrimary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkTextPrimary else LightTextPrimary
+
+val TextSecondary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkTextSecondary else LightTextSecondary
+
+val TextMuted: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) DarkTextMuted else LightTextMuted
 
 // ── Accent Colors (kept subtle) ───────────────────────────────────────────────
 val AccentTeal   = Color(0xFF29A693)   // teal

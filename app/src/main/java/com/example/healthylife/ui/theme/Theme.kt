@@ -5,30 +5,34 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider // Keep these here
+import androidx.compose.runtime.compositionLocalOf      // Keep these here
 import androidx.compose.ui.graphics.Color
+
+// All imports are now at the top
 
 private val DarkColorScheme = darkColorScheme(
     primary                = HealthGreen,
-    onPrimary              = DeepNavy,
+    onPrimary              = DarkDeepNavy,
     primaryContainer       = HealthGreenMuted,
     onPrimaryContainer     = HealthGreenLight,
     secondary              = AccentTeal,
-    onSecondary            = DeepNavy,
+    onSecondary            = DarkDeepNavy,
     secondaryContainer     = Color(0xFF0D2E28),
     onSecondaryContainer   = AccentTeal,
     tertiary               = AccentSage,
-    onTertiary             = DeepNavy,
+    onTertiary             = DarkDeepNavy,
     tertiaryContainer      = Color(0xFF1A2E20),
     onTertiaryContainer    = AccentSage,
-    background             = DeepNavy,
-    onBackground           = TextPrimary,
-    surface                = Slate,
-    onSurface              = TextPrimary,
-    surfaceVariant         = SlateLight,
-    onSurfaceVariant       = TextSecondary,
-    outline                = SlateLighter,
+    background             = DarkDeepNavy,
+    onBackground           = DarkTextPrimary,
+    surface                = DarkSlate,
+    onSurface              = DarkTextPrimary,
+    surfaceVariant         = DarkSlateLight,
+    onSurfaceVariant       = DarkTextSecondary,
+    outline                = DarkSlateLighter,
     error                  = CardPink,
-    onError                = DeepNavy
+    onError                = DarkDeepNavy
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -38,14 +42,19 @@ private val LightColorScheme = lightColorScheme(
     onSecondary          = Color.White,
     tertiary             = AccentSage,
     onTertiary           = Color.White,
-    background           = Color(0xFFF0F7F3),
-    onBackground         = Color(0xFF0D1A14),
-    surface              = Color.White,
-    onSurface            = Color(0xFF0D1A14),
-    surfaceVariant       = Color(0xFFE0EFE7),
-    onSurfaceVariant     = Color(0xFF2A4D38),
-    outline              = Color(0xFFB0CCB9)
+    background           = LightDeepNavy,
+    onBackground         = LightTextPrimary,
+    surface              = LightSlate,
+    onSurface            = LightTextPrimary,
+    surfaceVariant       = LightSlateLight,
+    onSurfaceVariant     = LightTextSecondary,
+    outline              = LightSlateLighter
 )
+
+// REMOVED: Duplicate imports that were here (lines 48-49)
+
+val LocalDarkTheme = compositionLocalOf { true }
+val LocalThemeToggle = compositionLocalOf<() -> Unit> { {} }
 
 @Composable
 fun HealthyLifeTheme(
@@ -53,9 +62,13 @@ fun HealthyLifeTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography  = Typography,
-        content     = content
-    )
+    CompositionLocalProvider(
+        LocalDarkTheme provides darkTheme
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography  = Typography,
+            content     = content
+        )
+    }
 }

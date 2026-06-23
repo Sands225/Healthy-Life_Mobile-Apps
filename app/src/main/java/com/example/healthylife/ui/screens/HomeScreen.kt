@@ -336,22 +336,44 @@ fun HomeScreen(padding: PaddingValues) {
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    // Avatar
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
-                            ),
-                        contentAlignment = Alignment.Center
+                    // Theme Toggle and Avatar Row
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = user.name.first().toString(),
-                            color = DeepNavy,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
+                        val isDark = LocalDarkTheme.current
+                        val toggleTheme = LocalThemeToggle.current
+                        
+                        IconButton(
+                            onClick = toggleTheme,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(GlassWhite)
+                        ) {
+                            Icon(
+                                imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Ubah Tema",
+                                tint = HealthGreen
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = user.name.first().toString(),
+                                color = DeepNavy,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp
+                            )
+                        }
                     }
                 }
             }

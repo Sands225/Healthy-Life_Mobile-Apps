@@ -57,9 +57,32 @@ fun SleepScreen(padding: PaddingValues) {
                     )
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
-                Column {
-                    Text("Sleep Tracker", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text("Pantau kualitas tidurmu", color = TextSecondary, fontSize = 13.sp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Sleep Tracker", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                        Text("Pantau kualitas tidurmu", color = TextSecondary, fontSize = 13.sp)
+                    }
+
+                    val isDark = LocalDarkTheme.current
+                    val toggleTheme = LocalThemeToggle.current
+
+                    IconButton(
+                        onClick = toggleTheme,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(GlassWhite)
+                    ) {
+                        Icon(
+                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Ubah Tema",
+                            tint = HealthGreen
+                        )
+                    }
                 }
             }
         }
