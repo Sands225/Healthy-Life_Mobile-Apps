@@ -169,12 +169,12 @@ Lapisan data terstruktur yang mendefinisikan entitas bisnis aplikasi:
 
 ## ✅ Fitur yang Telah Diselesaikan
 
-- [x] Sistem Navigasi Utama via Bottom Navigation Bar
-- [x] Dashboard Agregat Dinamis dengan indikator melingkar beranimasi
-- [x] Fitur Catat Cepat (Quick Add) untuk tidur, makanan, dan olahraga
-- [x] Penyaringan & Pencarian Makanan
-- [x] Bottom Sheet Entri Nutrisi Baru
-- [x] Pengubah Tema Instan (dark/light mode)
+- Sistem Navigasi Utama via Bottom Navigation Bar
+- Dashboard Agregat Dinamis dengan indikator melingkar beranimasi
+- Fitur Catat Cepat (Quick Add) untuk tidur, makanan, dan olahraga
+- Penyaringan & Pencarian Makanan
+- Bottom Sheet Entri Nutrisi Baru
+- Pengubah Tema Instan (dark/light mode)
 
 ---
 
