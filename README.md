@@ -195,12 +195,3 @@ Lapisan data terstruktur yang mendefinisikan entitas bisnis aplikasi:
 ## 🔗 Repository
 
 GitHub: [Sands225/Healthy-Life_Mobile-Apps](https://github.com/Sands225/Healthy-Life_Mobile-Apps.git)
-
----
-
-## 🎓 Informasi Akademik
-
-**Kelas:** Pemrograman Mobile A
-**Program Studi:** Sarjana Teknologi Informasi
-**Fakultas:** Teknik
-**Universitas:** Udayana — 2026
