@@ -1,8 +1,10 @@
 package com.example.healthylife.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,8 +34,10 @@ import androidx.compose.ui.platform.ComposeView
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Exercise
+import com.example.healthylife.ui.componenets.TimeFilterRow
 import com.example.healthylife.ui.theme.*
 import com.example.healthylife.util.DateUtils
+import com.example.healthylife.util.TimeFilter
 
 // Template aktivitas untuk shortcut / fast-add
 private data class ActivityTemplate(
@@ -120,6 +124,10 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
         )
     }
 
+    // ── Filter waktu (Harian / Minggu Ini / Minggu Sebelumnya) ─────────────────
+    var timeFilter by remember { mutableStateOf(TimeFilter.HARIAN) }
+    val filteredHistory = exerciseHistory.filter { timeFilter.matches(it.date) }
+
     // ── Bottom-sheet control ──────────────────────────────────────────────────
     var showAddSheet by remember { mutableStateOf(false) }
     var editingExercise by remember { mutableStateOf<Exercise?>(null) }
@@ -134,7 +142,13 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 val id = repository.insertExercise(exercise)
                 exerciseHistory.add(0, exercise.copy(id = id.toInt()))
                 showAddSheet = false
-            }
+            },
+            onAddTemplate = { template ->
+                if (activityTemplates.none { it.name.equals(template.name, ignoreCase = true) }) {
+                    activityTemplates.add(template)
+                }
+            },
+            onDeleteTemplate = { template -> activityTemplates.remove(template) }
         )
     }
 
@@ -168,7 +182,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
     // ── Main UI ───────────────────────────────────────────────────────────────
     Box(modifier = Modifier.fillMaxSize()) {
-        if (exerciseHistory.isEmpty()) {
+        if (filteredHistory.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -178,7 +192,9 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 ExerciseHeader()
                 Spacer(Modifier.height(20.dp))
                 TodaySummaryCard(exerciseHistory)
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(24.dp))
+                TimeFilterRow(selected = timeFilter, onSelected = { timeFilter = it })
+                Spacer(Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -239,7 +255,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
                         adapter = ExerciseAdapter(
-                            items = exerciseHistory.toList(),
+                            items = filteredHistory,
                             isDarkTheme = isDarkTheme,
                             onEdit = { editingExercise = it },
                             onDelete = { deletingExercise = it }
@@ -261,7 +277,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                     }
                     val adapter = recyclerView.adapter as? ExerciseAdapter
                     adapter?.updateTheme(isDarkTheme)
-                    adapter?.updateItems(exerciseHistory.toList())
+                    adapter?.updateItems(filteredHistory)
                 },
                 modifier = Modifier.fillMaxSize()
             )
@@ -289,10 +305,13 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
                         .onGloballyPositioned { coords ->
                             titleHeightPx = coords.size.height
                         }
                 ) {
+                    TimeFilterRow(selected = timeFilter, onSelected = { timeFilter = it })
+                    Spacer(Modifier.height(20.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -311,7 +330,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                             color = AccentTeal.copy(0.12f)
                         ) {
                             Text(
-                                "${exerciseHistory.size} sesi",
+                                "${filteredHistory.size} sesi",
                                 color = AccentTeal,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
@@ -359,14 +378,16 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AddActivitySheet — Bottom Sheet Tambah Aktivitas
-// Berisi: Tab "Quick Add" (shortcut) & "Manual"
+// Berisi: Tab "Tambah Cepat" (shortcut) & "Manual"
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddActivitySheet(
     templates: List<ActivityTemplate>,
     onDismiss: () -> Unit,
-    onLogActivity: (Exercise) -> Unit
+    onLogActivity: (Exercise) -> Unit,
+    onAddTemplate: (ActivityTemplate) -> Unit,
+    onDeleteTemplate: (ActivityTemplate) -> Unit
 ) {
     // Tab: 0 = Quick Add, 1 = Manual
     var activeTab by remember { mutableIntStateOf(0) }
@@ -424,8 +445,8 @@ private fun AddActivitySheet(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 listOf(
-                    "⚡ Quick Add" to 0,
-                    "✏️ Manual Add" to 1
+                    "⚡ Tambah Cepat" to 0,
+                    "✏️ Manual" to 1
                 ).forEach { (label, idx) ->
                     val selected = activeTab == idx
                     Box(
@@ -453,7 +474,9 @@ private fun AddActivitySheet(
             when (activeTab) {
                 0 -> QuickAddTab(
                     templates = templates,
-                    onLog = onLogActivity
+                    onLog = onLogActivity,
+                    onAddTemplate = onAddTemplate,
+                    onDeleteTemplate = onDeleteTemplate
                 )
                 1 -> ManualAddTab(onLog = onLogActivity)
             }
@@ -464,19 +487,62 @@ private fun AddActivitySheet(
 // ─────────────────────────────────────────────────────────────────────────────
 // Tab 0: Quick Add — pilih shortcut lalu log langsung
 // ─────────────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun QuickAddTab(
     templates: List<ActivityTemplate>,
-    onLog: (Exercise) -> Unit
+    onLog: (Exercise) -> Unit,
+    onAddTemplate: (ActivityTemplate) -> Unit,
+    onDeleteTemplate: (ActivityTemplate) -> Unit
 ) {
     var selected by remember { mutableStateOf<ActivityTemplate?>(null) }
     var duration by remember { mutableFloatStateOf(30f) }
+    var showAddTemplate by remember { mutableStateOf(false) }
+    var templateToDelete by remember { mutableStateOf<ActivityTemplate?>(null) }
+
+    if (showAddTemplate) {
+        AddTemplateDialog(
+            onDismiss = { showAddTemplate = false },
+            onConfirm = { t ->
+                onAddTemplate(t)
+                showAddTemplate = false
+            }
+        )
+    }
+
+    templateToDelete?.let { t ->
+        AlertDialog(
+            onDismissRequest = { templateToDelete = null },
+            title = { Text("Hapus Shortcut", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("Hapus shortcut \"${t.name}\" dari Tambah Cepat?", color = TextSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (selected == t) selected = null
+                    onDeleteTemplate(t)
+                    templateToDelete = null
+                }) { Text("Hapus", color = Color.Red, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { templateToDelete = null }) { Text("Batal", color = TextSecondary) }
+            },
+            containerColor = Slate,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("Pilih Aktivitas", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Pilih Aktivitas", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text("Tekan lama untuk hapus", color = TextMuted, fontSize = 10.sp)
+        }
 
-        // Grid shortcut aktivitas
-        val rowCount = Math.ceil(templates.size / 3.0).toInt()
+        // Grid shortcut aktivitas (+ tile untuk menambah shortcut baru)
+        val itemCount = templates.size + 1
+        val rowCount = Math.ceil(itemCount / 3.0).toInt()
         val gridHeight = (rowCount * 84 + (rowCount - 1) * 10).dp
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -502,7 +568,10 @@ private fun QuickAddTab(
                             if (!isSelected) Modifier.border(1.dp, SlateLight, RoundedCornerShape(14.dp))
                             else Modifier
                         )
-                        .clickable { selected = t }
+                        .combinedClickable(
+                            onClick = { selected = t },
+                            onLongClick = { templateToDelete = t }
+                        )
                         .padding(horizontal = 10.dp, vertical = 14.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -515,6 +584,23 @@ private fun QuickAddTab(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 11.sp
                         )
+                    }
+                }
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HealthGreen.copy(0.10f))
+                        .border(1.dp, HealthGreen.copy(0.4f), RoundedCornerShape(14.dp))
+                        .clickable { showAddTemplate = true }
+                        .padding(horizontal = 10.dp, vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Add, null, tint = HealthGreen, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.height(4.dp))
+                        Text("Tambah", color = HealthGreen, fontWeight = FontWeight.Medium, fontSize = 11.sp)
                     }
                 }
             }
@@ -770,7 +856,7 @@ private fun ExerciseHeader() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Exercise", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text("Olahraga", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.Bold)
                 Text("Pantau aktivitas fisikmu hari ini", color = TextSecondary, fontSize = 13.sp)
             }
 
@@ -1128,6 +1214,87 @@ private fun EditExerciseDialog(
             TextButton(onClick = onDismiss) {
                 Text("Batal", color = TextSecondary)
             }
+        },
+        containerColor = Slate,
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+@Composable
+private fun AddTemplateDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (ActivityTemplate) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var emoji by remember { mutableStateOf("🏃") }
+    var caloriesPerMinText by remember { mutableStateOf("8") }
+
+    val emojiOptions = listOf("🏃","🚶","🧘","🏋️","🚴","🏊","⛷️","🤸","🥊","🏸","⚽","🎾","🧗","🤽","🏇")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Buat Shortcut", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Pilih Ikon", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    modifier = Modifier.height(115.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    userScrollEnabled = true
+                ) {
+                    items(emojiOptions) { em ->
+                        val isSel = emoji == em
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSel) HealthGreen.copy(0.2f) else SlateLighter)
+                                .border(1.dp, if (isSel) HealthGreen else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { emoji = em },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(em, fontSize = 18.sp)
+                        }
+                    }
+                }
+
+                ExerciseTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = "Nama Aktivitas",
+                    placeholder = "Contoh: Zumba, Badminton..."
+                )
+                ExerciseTextField(
+                    value = caloriesPerMinText,
+                    onValueChange = { caloriesPerMinText = it.filter(Char::isDigit) },
+                    label = "Kalori per menit",
+                    placeholder = "8",
+                    keyboardType = KeyboardType.Number
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank()) {
+                        onConfirm(
+                            ActivityTemplate(
+                                emoji = emoji,
+                                name = name.trim(),
+                                caloriesPerMin = caloriesPerMinText.toIntOrNull() ?: 8
+                            )
+                        )
+                    }
+                }
+            ) { Text("Simpan", color = HealthGreen, fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Batal", color = TextSecondary) }
         },
         containerColor = Slate,
         shape = RoundedCornerShape(20.dp)

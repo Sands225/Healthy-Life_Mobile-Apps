@@ -8,5 +8,7 @@ data class Food(
     val carbs: Float,
     val protein: Float,
     val fat: Float,
-    val mealType: String  // Breakfast, Lunch, Dinner, Snack
+    val fiber: Float,
+    val mealType: String,  // Sarapan, Makan Siang, Makan Malam, Makanan Ringan
+    val date: String       // YYYY-MM-DD
 )

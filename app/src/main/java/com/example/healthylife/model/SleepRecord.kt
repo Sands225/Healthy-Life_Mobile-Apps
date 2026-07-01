@@ -6,5 +6,5 @@ data class SleepRecord(
     val bedTime: String,
     val wakeTime: String,
     val durationHours: Float,
-    val quality: String  // Excellent, Normal, Poor
+    val quality: String  // Baik, Cukup, Buruk
 )

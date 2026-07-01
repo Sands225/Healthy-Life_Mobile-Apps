@@ -22,11 +22,11 @@ fun AppNavigation(repository: HealthRepository) {
     val navController = rememberNavController()
 
     val items = listOf(
-        NavItem("home",      Icons.Default.Home,        "Home"),
-        NavItem("exercise",  Icons.Default.FitnessCenter,"Exercise"),
-        NavItem("nutrition", Icons.Default.Restaurant,   "Food"),
-        NavItem("sleep",     Icons.Default.Bedtime,      "Sleep"),
-        NavItem("profile",   Icons.Default.Person,       "Profile")
+        NavItem("home",      Icons.Default.Home,        "Beranda"),
+        NavItem("exercise",  Icons.Default.FitnessCenter,"Olahraga"),
+        NavItem("nutrition", Icons.Default.Restaurant,   "Makanan"),
+        NavItem("sleep",     Icons.Default.Bedtime,      "Tidur"),
+        NavItem("profile",   Icons.Default.Person,       "Profil")
     )
 
     Scaffold(

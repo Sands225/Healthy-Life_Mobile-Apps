@@ -31,6 +31,61 @@ object DateUtils {
         return getFormatter().format(calendar.time)
     }
 
+    /** Kalender dengan waktu dinormalisasi ke tengah malam. Null jika parsing gagal. */
+    private fun midnightCalendar(dateStr: String): Calendar? {
+        return try {
+            val parsed = getFormatter().parse(dateStr) ?: return null
+            Calendar.getInstance().apply {
+                time = parsed
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Awal minggu ini (Senin, tengah malam). */
+    private fun startOfThisWeek(): Calendar {
+        val cal = Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        return cal
+    }
+
+    /** Apakah tanggal ini adalah hari ini. */
+    fun isToday(dateStr: String): Boolean {
+        val target = midnightCalendar(dateStr) ?: return false
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return target.timeInMillis == today.timeInMillis
+    }
+
+    /** Apakah tanggal ini berada di dalam minggu ini (Senin–Minggu). */
+    fun isThisWeek(dateStr: String): Boolean {
+        val target = midnightCalendar(dateStr) ?: return false
+        val start = startOfThisWeek()
+        val end = (start.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 7) }
+        return target.timeInMillis >= start.timeInMillis && target.timeInMillis < end.timeInMillis
+    }
+
+    /** Apakah tanggal ini berada sebelum minggu ini (minggu-minggu sebelumnya). */
+    fun isBeforeThisWeek(dateStr: String): Boolean {
+        val target = midnightCalendar(dateStr) ?: return false
+        return target.timeInMillis < startOfThisWeek().timeInMillis
+    }
+
     /**
      * Mengubah string tanggal (YYYY-MM-DD) menjadi teks relatif (Hari ini, Kemarin, x hari lalu)
      */

@@ -59,9 +59,10 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
         if (dbFoods.isNotEmpty()) foods = dbFoods
     }
 
-    val sleep = sleepRecords.firstOrNull() ?: DummyData.lastNightSleep
-    val todayExercises = exercises.filter { it.date == DateUtils.getTodayDateString() }
-    val todayFoods = foods.take(5)
+    val sleep = sleepRecords.firstOrNull { DateUtils.isToday(it.date) }
+        ?: sleepRecords.firstOrNull() ?: DummyData.lastNightSleep
+    val todayExercises = exercises.filter { DateUtils.isToday(it.date) }
+    val todayFoods = foods.filter { DateUtils.isToday(it.date) }
 
     val totalCalories = todayFoods.sumOf { it.calories }
     val exerciseMinutes = todayExercises.sumOf { it.durationMinutes }
@@ -69,15 +70,6 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
     val totalCarbsToday = todayFoods.sumOf { it.carbs.toDouble() }.toFloat()
     val totalProteinToday = todayFoods.sumOf { it.protein.toDouble() }.toFloat()
     val totalFatToday = todayFoods.sumOf { it.fat.toDouble() }.toFloat()
-
-    val avgSleepHours = if (sleepRecords.isNotEmpty()) sleepRecords.map { it.durationHours }.average().toFloat() else 8f
-    val todayCaloriesBurned = todayExercises.sumOf { it.caloriesBurned }
-    val smartInsights = listOf(
-        "Target mingguan kamu hampir tercapai! Tetap semangat 💪",
-        "Tidurmu rata-rata ${String.format("%.1f", avgSleepHours)} jam — sangat baik!",
-        "Kamu sudah membakar ${todayCaloriesBurned} kcal hari ini 🔥",
-        "Streak ${user.streakDays} hari berturut-turut! Luar biasa! 🏆"
-    )
 
     // Animasi progress
     var showProgress by remember { mutableStateOf(false) }
@@ -178,7 +170,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                                 bedTime = "22:00",
                                 wakeTime = "${if (22 + hours.toInt() >= 24) 22 + hours.toInt() - 24 else 22 + hours.toInt()}:00",
                                 durationHours = hours,
-                                quality = "Normal"
+                                quality = "Cukup"
                             )
                             repository.insertSleepRecord(newRecord)
                             val dbSleep = repository.getAllSleepRecords()
@@ -254,7 +246,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                             val selectedFoodName = caloriesInput
                             val foodToLog = DummyData.foods.find { it.name == selectedFoodName }
                             if (foodToLog != null) {
-                                val newFoodLog = foodToLog.copy(id = 0)
+                                val newFoodLog = foodToLog.copy(id = 0, date = DateUtils.getTodayDateString())
                                 repository.insertFood(newFoodLog)
                                 val dbFoods = repository.getAllFoods()
                                 if (dbFoods.isNotEmpty()) foods = dbFoods
@@ -451,43 +443,6 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                             )
                         }
                     }
-                }
-            }
-        }
-
-        // ── Streak Card ───────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(20.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
-                    )
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "🔥 ${user.streakDays} Hari Berturut",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Pertahankan kebiasaan sehatmu!",
-                            color = Color.White.copy(alpha = 0.80f),
-                            fontSize = 13.sp
-                        )
-                    }
-                    Text(text = "🏆", fontSize = 40.sp)
                 }
             }
         }
@@ -723,59 +678,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
             }
         }
 
-        // ── Smart Insight ─────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(28.dp))
-            Text(
-                text = "Insight Mingguan",
-                modifier = Modifier.padding(horizontal = 20.dp),
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-            Spacer(Modifier.height(14.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(smartInsights) { insight ->
-                    Card(
-                        modifier = Modifier.width(220.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Slate),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(HealthGreen.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lightbulb,
-                                    contentDescription = null,
-                                    tint = HealthGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Text(
-                                text = insight,
-                                color = TextSecondary,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        }
+        item { Spacer(Modifier.height(8.dp)) }
     }
 }
 

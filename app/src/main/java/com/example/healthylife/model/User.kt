@@ -8,6 +8,5 @@ data class User(
     val height: Float,
     val targetCalories: Int,
     val targetSleepHours: Float,
-    val targetExerciseMinutes: Int,
-    val streakDays: Int
+    val targetExerciseMinutes: Int
 )

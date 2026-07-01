@@ -29,8 +29,7 @@ class HealthRepository(context: Context) {
                 height = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_HEIGHT)),
                 targetCalories = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_TARGET_CALORIES)),
                 targetSleepHours = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_TARGET_SLEEP_HOURS)),
-                targetExerciseMinutes = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_TARGET_EXERCISE_MINUTES)),
-                streakDays = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_STREAK_DAYS))
+                targetExerciseMinutes = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_USER_TARGET_EXERCISE_MINUTES))
             )
         }
         cursor.close()
@@ -47,7 +46,6 @@ class HealthRepository(context: Context) {
             put(DatabaseHelper.KEY_USER_TARGET_CALORIES, user.targetCalories)
             put(DatabaseHelper.KEY_USER_TARGET_SLEEP_HOURS, user.targetSleepHours)
             put(DatabaseHelper.KEY_USER_TARGET_EXERCISE_MINUTES, user.targetExerciseMinutes)
-            put(DatabaseHelper.KEY_USER_STREAK_DAYS, user.streakDays)
         }
         return db.update(
             DatabaseHelper.TABLE_USERS,
@@ -137,7 +135,9 @@ class HealthRepository(context: Context) {
                     carbs = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_CARBS)),
                     protein = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_PROTEIN)),
                     fat = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_FAT)),
-                    mealType = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_MEAL_TYPE))
+                    fiber = cursor.getFloat(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_FIBER)),
+                    mealType = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_MEAL_TYPE)),
+                    date = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.KEY_FOOD_DATE))
                 )
                 list.add(food)
             } while (cursor.moveToNext())
@@ -155,9 +155,41 @@ class HealthRepository(context: Context) {
             put(DatabaseHelper.KEY_FOOD_CARBS, food.carbs)
             put(DatabaseHelper.KEY_FOOD_PROTEIN, food.protein)
             put(DatabaseHelper.KEY_FOOD_FAT, food.fat)
+            put(DatabaseHelper.KEY_FOOD_FIBER, food.fiber)
             put(DatabaseHelper.KEY_FOOD_MEAL_TYPE, food.mealType)
+            put(DatabaseHelper.KEY_FOOD_DATE, food.date)
         }
         return db.insert(DatabaseHelper.TABLE_FOODS, null, values)
+    }
+
+    fun updateFood(food: Food): Int {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.KEY_FOOD_NAME, food.name)
+            put(DatabaseHelper.KEY_FOOD_EMOJI, food.emoji)
+            put(DatabaseHelper.KEY_FOOD_CALORIES, food.calories)
+            put(DatabaseHelper.KEY_FOOD_CARBS, food.carbs)
+            put(DatabaseHelper.KEY_FOOD_PROTEIN, food.protein)
+            put(DatabaseHelper.KEY_FOOD_FAT, food.fat)
+            put(DatabaseHelper.KEY_FOOD_FIBER, food.fiber)
+            put(DatabaseHelper.KEY_FOOD_MEAL_TYPE, food.mealType)
+            put(DatabaseHelper.KEY_FOOD_DATE, food.date)
+        }
+        return db.update(
+            DatabaseHelper.TABLE_FOODS,
+            values,
+            "${DatabaseHelper.KEY_FOOD_ID} = ?",
+            arrayOf(food.id.toString())
+        )
+    }
+
+    fun deleteFood(id: Int): Int {
+        val db = dbHelper.writableDatabase
+        return db.delete(
+            DatabaseHelper.TABLE_FOODS,
+            "${DatabaseHelper.KEY_FOOD_ID} = ?",
+            arrayOf(id.toString())
+        )
     }
 
     // ── SLEEP OPERATIONS ──────────────────────────────────────────────────────
@@ -195,5 +227,31 @@ class HealthRepository(context: Context) {
             put(DatabaseHelper.KEY_SLEEP_QUALITY, record.quality)
         }
         return db.insert(DatabaseHelper.TABLE_SLEEP_RECORDS, null, values)
+    }
+
+    fun updateSleepRecord(record: SleepRecord): Int {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.KEY_SLEEP_DATE, record.date)
+            put(DatabaseHelper.KEY_SLEEP_BED_TIME, record.bedTime)
+            put(DatabaseHelper.KEY_SLEEP_WAKE_TIME, record.wakeTime)
+            put(DatabaseHelper.KEY_SLEEP_DURATION_HOURS, record.durationHours)
+            put(DatabaseHelper.KEY_SLEEP_QUALITY, record.quality)
+        }
+        return db.update(
+            DatabaseHelper.TABLE_SLEEP_RECORDS,
+            values,
+            "${DatabaseHelper.KEY_SLEEP_ID} = ?",
+            arrayOf(record.id.toString())
+        )
+    }
+
+    fun deleteSleepRecord(id: Int): Int {
+        val db = dbHelper.writableDatabase
+        return db.delete(
+            DatabaseHelper.TABLE_SLEEP_RECORDS,
+            "${DatabaseHelper.KEY_SLEEP_ID} = ?",
+            arrayOf(id.toString())
+        )
     }
 }

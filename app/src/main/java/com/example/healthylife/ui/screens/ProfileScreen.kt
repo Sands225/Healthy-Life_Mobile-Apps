@@ -101,22 +101,7 @@ fun ProfileScreen(padding: PaddingValues, repository: HealthRepository) {
                 }
                 Spacer(Modifier.height(14.dp))
                 Text(user.name, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text("Healthy Life Member 🌿", color = HealthGreen, fontSize = 13.sp)
-                Spacer(Modifier.height(8.dp))
-                // Streak badge
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(HealthGreen.copy(0.15f))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        "🔥 ${user.streakDays} Hari Streak",
-                        color = HealthGreen,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                Text("Anggota Healthy Life 🌿", color = HealthGreen, fontSize = 13.sp)
             }
         }
 
@@ -191,6 +176,55 @@ fun ProfileScreen(padding: PaddingValues, repository: HealthRepository) {
                 }
 
                 item {
+                    // Preview BMI langsung dari tinggi & berat yang diedit
+                    val h = editHeight.toFloatOrNull() ?: user.height
+                    val w = editWeight.toFloatOrNull() ?: user.weight
+                    val previewBmi = if (h > 0f) w / ((h / 100f) * (h / 100f)) else 0f
+                    val statusLabel = when {
+                        previewBmi < 18.5 -> "Kurus"
+                        previewBmi < 25f  -> "Normal"
+                        previewBmi < 30f  -> "Gemuk"
+                        else              -> "Obesitas"
+                    }
+                    val statusColor = when {
+                        previewBmi < 18.5 -> AccentTeal
+                        previewBmi < 25f  -> HealthGreen
+                        else              -> CardPink
+                    }
+                    Card(
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = SlateLighter),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("BMI (otomatis)", color = TextSecondary, fontSize = 12.sp)
+                                Text(
+                                    String.format("%.1f", previewBmi),
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(statusColor.copy(alpha = 0.15f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(statusLabel, color = statusColor, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+
+                item {
                     Text("Target Harian", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -240,8 +274,7 @@ fun ProfileScreen(padding: PaddingValues, repository: HealthRepository) {
                                     height = editHeight.toFloatOrNull() ?: user.height,
                                     targetCalories = editTargetCalories.toIntOrNull() ?: user.targetCalories,
                                     targetSleepHours = editTargetSleepHours.toFloatOrNull() ?: user.targetSleepHours,
-                                    targetExerciseMinutes = editTargetExerciseMinutes.toIntOrNull() ?: user.targetExerciseMinutes,
-                                    streakDays = user.streakDays
+                                    targetExerciseMinutes = editTargetExerciseMinutes.toIntOrNull() ?: user.targetExerciseMinutes
                                 )
                                 repository.updateUser(updatedUser)
                                 user = updatedUser
