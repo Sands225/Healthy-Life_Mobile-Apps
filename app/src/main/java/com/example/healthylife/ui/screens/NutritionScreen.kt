@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Food
+import com.example.healthylife.ui.componenets.AnalyticsSection
 import com.example.healthylife.ui.componenets.TimeFilterRow
 import com.example.healthylife.ui.theme.*
 import com.example.healthylife.util.DateUtils
@@ -45,7 +46,7 @@ fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
 
     var search by remember { mutableStateOf("") }
     var selectedMeal by remember { mutableStateOf("Semua") }
-    var timeFilter by remember { mutableStateOf(TimeFilter.HARIAN) }
+    var timeFilter by remember { mutableStateOf(TimeFilter.HARI_INI) }
 
     var user by remember { mutableStateOf(DummyData.currentUser) }
 
@@ -223,6 +224,24 @@ fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
                     }
                 }
             }
+        }
+
+        // ── Analitik Kalori ───────────────────────────────────────────────────
+        item {
+            Spacer(Modifier.height(24.dp))
+            Text(
+                "Analitik Kalori",
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Spacer(Modifier.height(12.dp))
+            AnalyticsSection(
+                unit = "kcal",
+                accent = HealthGreen,
+                data = foodList.map { it.date to it.calories.toFloat() }
+            )
         }
 
         // ── Filter Waktu ──────────────────────────────────────────────────────

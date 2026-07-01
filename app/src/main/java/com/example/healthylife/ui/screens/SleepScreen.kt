@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.SleepRecord
+import com.example.healthylife.ui.componenets.AnalyticsSection
 import com.example.healthylife.ui.componenets.TimeFilterRow
 import com.example.healthylife.ui.theme.*
 import com.example.healthylife.util.DateUtils
@@ -271,7 +272,7 @@ fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
                     Slider(
                         value = hoursInput,
                         onValueChange = { hoursInput = it },
-                        valueRange = 3f..12f,
+                        valueRange = 0f..24f,
                         colors = SliderDefaults.colors(
                             thumbColor = HealthGreen,
                             activeTrackColor = HealthGreen,
@@ -368,66 +369,22 @@ fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
             }
         }
 
-        // ── Grafik 7 hari terakhir ─────────────────────────────────────────────
+        // ── Analitik Tidur ─────────────────────────────────────────────────────
         item {
             Spacer(Modifier.height(24.dp))
             Text(
-                "7 Hari Terakhir",
+                "Analitik Tidur",
                 modifier = Modifier.padding(horizontal = 20.dp),
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
-            Spacer(Modifier.height(14.dp))
-            val chartRecords = allRecords.take(7).reversed()
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        chartRecords.forEachIndexed { i, rec ->
-                            val heightFraction = (rec.durationHours / 10f).coerceIn(0f, 1f)
-                            val barColor = qualityColor(rec.quality)
-                            val isLast = i == chartRecords.size - 1
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Bottom,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("${rec.durationHours.toInt()}j", color = barColor, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                Spacer(Modifier.height(4.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .width(22.dp)
-                                        .height((heightFraction * 80).dp)
-                                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                        .background(
-                                            if (isLast)
-                                                Brush.verticalGradient(listOf(barColor, barColor.copy(0.5f)))
-                                            else
-                                                Brush.verticalGradient(listOf(barColor.copy(0.6f), barColor.copy(0.2f)))
-                                        )
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    DummyData.weekDayLabels[i % DummyData.weekDayLabels.size],
-                                    color = if (isLast) HealthGreen else TextMuted,
-                                    fontSize = 9.sp,
-                                    fontWeight = if (isLast) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            Spacer(Modifier.height(12.dp))
+            AnalyticsSection(
+                unit = "jam",
+                accent = AccentTeal,
+                data = allRecords.map { it.date to it.durationHours }
+            )
         }
 
         // ── Filter + Riwayat ───────────────────────────────────────────────────
@@ -570,7 +527,7 @@ private fun EditSleepDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                val hours = hoursText.toFloatOrNull() ?: record.durationHours
+                val hours = (hoursText.toFloatOrNull() ?: record.durationHours).coerceIn(0f, 24f)
                 onConfirm(record.copy(durationHours = hours, quality = quality))
             }) { Text("Simpan", color = HealthGreen, fontWeight = FontWeight.Bold) }
         },

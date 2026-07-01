@@ -6,6 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.*
@@ -34,6 +36,7 @@ import androidx.compose.ui.platform.ComposeView
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Exercise
+import com.example.healthylife.ui.componenets.AnalyticsSection
 import com.example.healthylife.ui.componenets.TimeFilterRow
 import com.example.healthylife.ui.theme.*
 import com.example.healthylife.util.DateUtils
@@ -125,7 +128,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
     }
 
     // ── Filter waktu (Harian / Minggu Ini / Minggu Sebelumnya) ─────────────────
-    var timeFilter by remember { mutableStateOf(TimeFilter.HARIAN) }
+    var timeFilter by remember { mutableStateOf(TimeFilter.HARI_INI) }
     val filteredHistory = exerciseHistory.filter { timeFilter.matches(it.date) }
 
     // ── Bottom-sheet control ──────────────────────────────────────────────────
@@ -188,10 +191,25 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .padding(padding)
+                    .verticalScroll(rememberScrollState())
             ) {
                 ExerciseHeader()
                 Spacer(Modifier.height(20.dp))
                 TodaySummaryCard(exerciseHistory)
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "Analitik",
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(Modifier.height(12.dp))
+                AnalyticsSection(
+                    unit = "menit",
+                    accent = AccentTeal,
+                    data = exerciseHistory.map { it.date to it.durationMinutes.toFloat() }
+                )
                 Spacer(Modifier.height(24.dp))
                 TimeFilterRow(selected = timeFilter, onSelected = { timeFilter = it })
                 Spacer(Modifier.height(20.dp))
@@ -224,8 +242,8 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 Spacer(Modifier.height(12.dp))
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyHistoryState()
@@ -299,6 +317,20 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                     ExerciseHeader()
                     Spacer(Modifier.height(20.dp))
                     TodaySummaryCard(exerciseHistory)
+                    Spacer(Modifier.height(24.dp))
+                    Text(
+                        "Analitik",
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    AnalyticsSection(
+                        unit = "menit",
+                        accent = AccentTeal,
+                        data = exerciseHistory.map { it.date to it.durationMinutes.toFloat() }
+                    )
                     Spacer(Modifier.height(28.dp))
                 }
 

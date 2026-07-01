@@ -86,6 +86,37 @@ object DateUtils {
         return target.timeInMillis < startOfThisWeek().timeInMillis
     }
 
+    private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
+
+    /** Indeks hari dalam minggu ini: 0 = Senin .. 6 = Minggu, atau -1 jika bukan minggu ini. */
+    fun dayIndexInThisWeek(dateStr: String): Int {
+        val target = midnightCalendar(dateStr) ?: return -1
+        val start = startOfThisWeek()
+        val diff = (target.timeInMillis - start.timeInMillis) / MILLIS_PER_DAY
+        return if (diff in 0..6) diff.toInt() else -1
+    }
+
+    /** Tanggal awal minggu (Senin, format YYYY-MM-DD) dari sebuah tanggal. Null jika parsing gagal. */
+    fun weekStartString(dateStr: String): String? {
+        val target = midnightCalendar(dateStr) ?: return null
+        target.firstDayOfWeek = Calendar.MONDAY
+        // Mundur ke Senin
+        while (target.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            target.add(Calendar.DAY_OF_YEAR, -1)
+        }
+        return getFormatter().format(target.time)
+    }
+
+    /** Format tanggal pendek "dd MMM" (contoh: 07 Jul). */
+    fun formatDayMonth(dateStr: String): String {
+        return try {
+            val parsed = getFormatter().parse(dateStr) ?: return dateStr
+            SimpleDateFormat("dd MMM", Locale("in", "ID")).format(parsed)
+        } catch (e: Exception) {
+            dateStr
+        }
+    }
+
     /**
      * Mengubah string tanggal (YYYY-MM-DD) menjadi teks relatif (Hari ini, Kemarin, x hari lalu)
      */

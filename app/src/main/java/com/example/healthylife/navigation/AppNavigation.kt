@@ -78,7 +78,20 @@ fun AppNavigation(repository: HealthRepository) {
             composable("exercise")  { ExerciseScreen(innerPadding, repository) }
             composable("nutrition") { NutritionScreen(innerPadding, repository) }
             composable("sleep")     { SleepScreen(innerPadding, repository) }
-            composable("profile")   { ProfileScreen(innerPadding, repository) }
+            composable("profile")   {
+                ProfileScreen(
+                    innerPadding,
+                    repository,
+                    onOpenSettings = { navController.navigate("settings") }
+                )
+            }
+            composable("settings")  {
+                SettingsScreen(
+                    innerPadding,
+                    repository,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
