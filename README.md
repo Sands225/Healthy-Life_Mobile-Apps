@@ -1,197 +1,340 @@
-# 🌿 HealthyLife: Aplikasi Pemantauan Aktivitas dan Kebiasaan Sehat
+# 🌿 HealthyLife Mobile Apps
+### *Track Better. Live Healthier.*
 
-HealthyLife adalah aplikasi mobile berbasis Android yang membantu pengguna memantau dan mengelola gaya hidup sehat secara komprehensif. Aplikasi ini mengintegrasikan empat aspek utama kesehatan — **aktivitas olahraga**, **pola nutrisi**, **kualitas tidur**, dan **profil kesehatan pribadi** — dalam satu platform yang mudah digunakan.
+HealthyLife merupakan aplikasi Android yang membantu pengguna membangun kebiasaan hidup sehat melalui pemantauan aktivitas olahraga, nutrisi, tidur, serta profil kesehatan dalam satu aplikasi yang sederhana, modern, dan mudah digunakan.
 
-Dikembangkan menggunakan **Kotlin** dan **Jetpack Compose**, HealthyLife mengusung konsep **dark mode** dengan kombinasi warna navy sebagai warna utama, hijau (`HealthGreen`) sebagai simbol kesehatan, dan aksen biru langit (`SkyBlue`) untuk memberikan kesan profesional, modern, dan elegan.
+> 📱 Tugas Project Mata Kuliah **Pemrograman Mobile A**  
+> Program Studi Teknologi Informasi  
+> Fakultas Teknik — Universitas Udayana (2026)
 
 ---
 
-## 📌 Tentang Project
+# 📖 Tentang Project
 
-> Tugas Kelompok 6 — Mata Kuliah Pemrograman Mobile A
-> Program Studi Sarjana Teknologi Informasi, Fakultas Teknik, Universitas Udayana (2026)
+HealthyLife dikembangkan sebagai aplikasi **Health & Lifestyle Tracker** yang memungkinkan pengguna mencatat berbagai aktivitas kesehatannya setiap hari.
 
-**Dosen Pengampu:** Anak Agung Ketut Agung Cahyawan Wiranatha, ST, MT
+Aplikasi mengintegrasikan beberapa aspek kesehatan dalam satu dashboard sehingga pengguna dapat memonitor perkembangan gaya hidup sehat secara lebih efektif.
 
-**Disusun oleh:**
+Fokus utama aplikasi meliputi:
+
+- 🏃 Aktivitas olahraga
+- 🥗 Nutrisi dan konsumsi makanan
+- 😴 Monitoring tidur
+- ❤️ Profil kesehatan pengguna
+- 📊 Visualisasi statistik aktivitas
+
+---
+
+# ✨ Fitur yang Telah Diimplementasikan
+
+## 🏠 Home Dashboard
+
+- Ringkasan aktivitas harian
+- Statistik kesehatan
+- Ring Progress
+- Bar Chart Analytics
+- Quick Navigation Menu
+
+---
+
+## 🏃 Exercise Tracker
+
+- Daftar aktivitas olahraga
+- Durasi olahraga
+- Kalori terbakar
+- Riwayat olahraga
+- RecyclerView Adapter
+
+---
+
+## 🥗 Nutrition Tracker
+
+- Daftar makanan
+- Informasi kalori
+- Tracking konsumsi nutrisi
+- RecyclerView Adapter
+
+---
+
+## 😴 Sleep Tracker
+
+- Durasi tidur
+- Riwayat tidur
+- Monitoring jam tidur
+- RecyclerView Adapter
+
+---
+
+## 👤 Profile
+
+- Informasi pengguna
+- Body Mass Index (BMI)
+- Data kesehatan dasar
+
+---
+
+## ⚙ Settings
+
+- Pengaturan aplikasi
+- Theme Preferences
+- Pengaturan tampilan
+
+---
+
+## 📈 Analytics
+
+HealthyLife telah memiliki komponen visualisasi data berupa:
+
+- Ring Progress Indicator
+- Bar Chart
+- Activity Analytics
+- Daily Summary
+
+---
+
+# 🏗 Arsitektur Project
+
+Project menggunakan struktur package yang cukup modular.
+
+```
+app/src/main
+│
+├── java/com/example/healthylife
+│   │
+│   ├── MainActivity.kt 
+│   │
+│   ├── data                      
+│   │   ├── DatabaseHelper.kt         
+│   │   ├── DummyData.kt            
+│   │   └── HealthRepository.kt     
+│   │
+│   ├── model                          
+│   │   ├── User.kt                   
+│   │   ├── Exercise.kt                
+│   │   ├── Food.kt
+│   │   └── SleepRecord.kt             
+│   │
+│   ├── ui                             
+│   │   └── view
+│   │       ├── Navigator.kt           
+│   │       ├── HomeFragment.kt        
+│   │       ├── ExerciseFragment.kt    
+│   │       ├── NutritionFragment.kt   
+│   │       ├── SleepFragment.kt       
+│   │       ├── ProfileFragment.kt     
+│   │       ├── SettingsFragment.kt    
+│   │       │
+│   │       ├── adapter                
+│   │       │   ├── ExerciseAdapter.kt 
+│   │       │   ├── FoodAdapter.kt     
+│   │       │   └── SleepAdapter.kt    
+│   │       │
+│   │       └── widget                
+│   │           ├── RingProgressView.kt 
+│   │           ├── BarChartView.kt    
+│   │           ├── AnalyticsBinder.kt 
+│   │           └── Segmented.kt       
+│   │
+│   └── util                           
+│       ├── Analytics.kt               
+│       ├── DateUtils.kt               
+│       ├── ThemePrefs.kt              
+│       └── TimeFilter.kt              
+│
+└── res                                
+    │
+    ├── layout                         
+    │   ├── activity_main.xml          
+    │   │
+    │   ├── fragment_home.xml          
+    │   ├── fragment_exercise.xml      
+    │   ├── fragment_nutrition.xml     
+    │   ├── fragment_sleep.xml         
+    │   ├── fragment_profile.xml       
+    │   ├── fragment_settings.xml      
+    │   │
+    │   ├── item_bottom_tab.xml        
+    │   ├── item_exercise.xml          
+    │   ├── item_food.xml              
+    │   ├── item_sleep.xml             
+    │   ├── item_progress_ring.xml     
+    │   ├── item_quick_add.xml         
+    │   │
+    │   ├── dialog_quick_add.xml       
+    │   ├── dialog_exercise_form.xml    
+    │   ├── dialog_food_form.xml 
+    │   └── dialog_edit_sleep.xml       
+    │
+    └── values                         
+        ├── colors.xml 
+        ├── strings.xml                
+        └── themes.xml                 
+```
+
+---
+
+# 🛠 Tech Stack
+
+| Komponen | Teknologi |
+|-----------|-----------|
+| Language | Kotlin |
+| Minimum SDK | API 24 |
+| Target JVM | Java 11 |
+| IDE | Android Studio |
+| Database | SQLite |
+| UI | XML Layout |
+| Navigation | Fragment Navigation |
+| Build System | Gradle Kotlin DSL |
+| Material Components | Material Design |
+| RecyclerView | ✔ |
+| Custom View | ✔ |
+| SharedPreferences | ✔ |
+
+---
+
+# 📂 Penyimpanan Data
+
+HealthyLife menggunakan kombinasi beberapa mekanisme penyimpanan data:
+
+- SQLite Database
+- SharedPreferences
+- Dummy Data Repository (development)
+
+---
+
+# 📊 Visual Components
+
+Aplikasi memiliki beberapa komponen visual yang dibuat secara khusus.
+
+- 📈 Custom Bar Chart
+- 🔵 Ring Progress Indicator
+- 📊 Activity Analytics
+- 📅 Daily Summary
+
+---
+
+# 📸 Tampilan Aplikasi
+
+> Tambahkan screenshot aplikasi pada folder berikut:
+
+```
+docs/
+│
+├── home.png
+├── exercise.png
+├── nutrition.png
+├── sleep.png
+├── profile.png
+└── settings.png
+```
+
+Kemudian tampilkan menggunakan Markdown:
+
+```md
+## Home
+
+![Home](docs/home.png)
+
+## Exercise
+
+![Exercise](docs/exercise.png)
+
+## Nutrition
+
+![Nutrition](docs/nutrition.png)
+
+## Sleep
+
+![Sleep](docs/sleep.png)
+
+## Profile
+
+![Profile](docs/profile.png)
+
+## Settings
+
+![Settings](docs/settings.png)
+```
+
+---
+
+# 🚀 Cara Menjalankan Project
+
+### Clone Repository
+
+```bash
+git clone https://github.com/username/Healthy-Life_Mobile-Apps.git
+```
+
+### Buka Project
+
+```
+Android Studio
+Open Existing Project
+```
+
+### Build
+
+```
+Sync Gradle
+Run App
+```
+
+atau
+
+```
+Shift + F10
+```
+
+---
+
+# 👨‍💻 Tim Pengembang
+
 | Nama | NIM |
-|---|---|
+|------|------|
 | I Gusti Bagus Narendratanaya Wiweka | 2405551007 |
 | Anak Agung Narendera Sancaya | 2405551038 |
 | I Made Sandika Wijaya | 2405551082 |
 
 ---
 
-## 🎯 Tujuan Aplikasi
+# 🎯 Roadmap
 
-HealthyLife bertujuan menyediakan platform terpadu yang membantu pengguna menerapkan pola hidup sehat secara konsisten, melalui:
+### ✅ Selesai
 
-- Pelacakan aktivitas fisik harian
-- Pemantauan asupan kalori serta kandungan nutrisi makanan
-- Pencatatan durasi dan kualitas tidur setiap hari
-- Ringkasan aktivitas kesehatan harian secara terintegrasi
-- Fitur **streak motivasi** untuk meningkatkan konsistensi kebiasaan sehat
-- Profil kesehatan dengan perhitungan **Body Mass Index (BMI)**
+- Home Dashboard
+- Exercise Module
+- Nutrition Module
+- Sleep Module
+- Profile
+- Settings
+- SQLite Database
+- Analytics Widget
+- RecyclerView
+- Theme Preference
 
----
+### 🚧 Dalam Pengembangan
 
-## 🛠️ Teknologi dan Dependensi Utama
-
-| Komponen | Teknologi |
-|---|---|
-| Bahasa Pemrograman | Kotlin (target JVM 11) |
-| UI Framework | Jetpack Compose + Material Design 3 |
-| Navigasi | Navigation Compose (`NavHost`, `NavController`) |
-| Ikon | Material Icons Extended |
-| Build System | Gradle KTS (Kotlin DSL), `libs.versions.toml` |
-| Min SDK | API 24 (Android 7.0) |
-| Target SDK | API 36 |
-
----
-
-## 📂 Struktur Direktori
-
-```
-com.example.healthylife
-│
-├── MainActivity.kt
-│
-├── navigation
-│   ├── AppNavigation.kt
-│   └── Screen.kt
-│
-├── model
-│   ├── Food.kt
-│   ├── SleepRecord.kt
-│   ├── Exercise.kt
-│   └── User.kt
-│
-├── data
-│   └── DummyData.kt
-│
-├── ui
-│   ├── screens
-│   │   ├── HomeScreen.kt
-│   │   ├── ExerciseScreen.kt
-│   │   ├── NutritionScreen.kt
-│   │   ├── SleepScreen.kt
-│   │   ├── ProgressScreen.kt
-│   │   └── ProfileScreen.kt
-│   │
-│   ├── components
-│   │   ├── BottomBar.kt
-│   │   ├── ExerciseCard.kt
-│   │   ├── StreakCard.kt
-│   │   ├── SummaryCard.kt
-│   │   └── PortionCard.kt
-│   │
-│   └── theme
-│       ├── Color.kt
-│       ├── Theme.kt
-│       └── Type.kt
-```
-
-Struktur ini disusun berdasarkan prinsip **separation of concerns**, sehingga setiap komponen aplikasi ditempatkan pada package yang sesuai dengan peran dan fungsinya:
-
-- **`navigation`** — mengelola navigasi antarhalaman
-- **`model`** — model data utama (makanan, olahraga, tidur, pengguna)
-- **`data`** — sumber data sementara (dummy/mock repository)
-- **`ui/screens`** — halaman utama aplikasi
-- **`ui/components`** — komponen UI yang dapat digunakan kembali
-- **`ui/theme`** — definisi warna, tema, dan tipografi
+- Authentication
+- Daily Reminder
+- Notification
+- Goal Tracking
+- Achievement System
+- Export Health Report
+- Cloud Synchronization
 
 ---
 
-## ✨ Fitur Aplikasi
+# 📜 Lisensi
 
-Navigasi aplikasi diatur secara dinamis melalui **5 menu utama** pada Bottom Navigation Bar.
-
-### 🏠 1. Dashboard / Home Screen
-- **Greeting & User Profile Banner** — sapaan personal berdasarkan nama akun dan avatar pengguna
-- **Streak Counter** — indikator konsistensi penggunaan aplikasi secara berturut-turut
-- **Animated Progress Rings** — tiga lingkaran progress untuk Kalori, Olahraga, dan Tidur
-- **Quick Add Dialogs** — log cepat tidur, makanan, dan olahraga langsung dari halaman utama
-- **Riwayat Aktivitas Hari Ini** — daftar olahraga harian beserta kalori terbakar
-- **Ringkasan Nutrisi & Progress Makro** — total kalori serta rincian karbohidrat, protein, dan lemak
-- **Insight Mingguan (Smart Insights)** — kartu geser berisi tips/analisis kebiasaan berbasis data
-
-### 🏃 2. Exercise Screen
-- Statistik kebugaran harian (durasi, kalori terbakar, jumlah sesi)
-- Grid pemilihan 6 jenis olahraga: Running, Walking, Yoga, Gym, Cycling, Swimming
-- Slider durasi olahraga (15–120 menit) dengan tombol preset cepat
-- Estimasi kalori terbakar secara real-time
-- Riwayat olahraga kronologis
-
-### 🍽️ 3. Nutrition Screen
-- Calorie Target & Tracker dengan visualisasi progres
-- Macronutrient Summary (Karbohidrat, Protein, Lemak)
-- Filter jenis makanan (Breakfast, Lunch, Dinner, Snack, Semua)
-- Pencarian makanan dinamis
-- Quick Add Food — tambah makanan ke log harian dengan satu tombol
-
-### 😴 4. Sleep Screen
-- Ringkasan tidur semalam (durasi, bedtime, wake-up time, kualitas)
-- Analisis tren tidur mingguan vs target harian
-- Grafik batang mingguan dengan warna dinamis berdasarkan kualitas tidur
-- Pencatat kualitas tidur (Excellent, Normal, Poor) dengan ikon emoji
-- Riwayat tidur terperinci
-
-### 👤 5. Profile Screen
-- Informasi demografis & akun, lencana streak aktif
-- Kartu dimensi fisik (umur, tinggi, berat badan)
-- Kalkulator BMI (Body Mass Index) otomatis
-- Visualisasi skala BMI dengan kategori warna (Kurus/Teal, Normal/Hijau, Gemuk-Obesitas/Pink)
+Project ini dikembangkan untuk keperluan akademik pada Mata Kuliah **Pemrograman Mobile A** Program Studi Teknologi Informasi Universitas Udayana.
 
 ---
 
-## 🧩 Progress Pengerjaan Teknis
+<div align="center">
 
-### Modul Model
-Lapisan data terstruktur yang mendefinisikan entitas bisnis aplikasi:
-- `User.kt` — skema profil pengguna (nama, berat, tinggi, target kalori/tidur/olahraga, streak)
-- `Food.kt` — entri konsumsi makanan (nama, emoji, mealType, kalori, makronutrien)
-- `Exercise.kt` — data latihan olahraga (jenis, durasi, kalori terbakar, tanggal)
-- `SleepRecord.kt` — data kualitas tidur (tanggal, bedtime, wake time, durasi, kualitas)
+### 🌿 HealthyLife
 
-### Modul Data
-- `DummyData.kt` — mock repository berisi data in-memory user aktif, riwayat olahraga, log makanan, dan catatan tidur, lengkap dengan kalkulasi agregat dan logika `smartInsights`.
+**Healthy habits start with small daily actions.**
 
-### Modul UI
-- **Screens** — `HomeScreen`, `NutritionScreen`, `SleepScreen`, `ExerciseScreen`, `ProfileScreen`
-- **Navigation** — `AppNavigation.kt` mengatur transisi antarlayar via Navigation Compose
-- **Components** — komponen terpisah (`BottomBar`, `ExerciseCard`, `StreakCard`, `SummaryCard`) untuk mempermudah maintenance
-
-### Modul Desain
-- `Color.kt` — palet warna dark mode (HealthGreen, AccentTeal, AccentSage) + opasitas glassmorphism
-- `Theme.kt` — pengelolaan ColorScheme Dark/Light secara dinamis via `CompositionLocalProvider`
-
----
-
-## ✅ Fitur yang Telah Diselesaikan
-
-- Sistem Navigasi Utama via Bottom Navigation Bar
-- Dashboard Agregat Dinamis dengan indikator melingkar beranimasi
-- Fitur Catat Cepat (Quick Add) untuk tidur, makanan, dan olahraga
-- Penyaringan & Pencarian Makanan
-- Bottom Sheet Entri Nutrisi Baru
-- Pengubah Tema Instan (dark/light mode)
-
----
-
-## 📱 Tampilan Aplikasi
-
-| Home | Exercise | Nutrition |
-|---|---|---|
-| Dashboard ringkasan kalori, olahraga, tidur, dan insight mingguan | Pencatatan olahraga dengan slider durasi & estimasi kalori | Pelacakan kalori, filter & pencarian makanan |
-
-| Sleep | Profile |
-|---|---|
-| Pemantauan kualitas dan riwayat tidur mingguan | Data biometrik pengguna & kalkulator BMI |
-
-> Screenshot lengkap tersedia pada laporan progress project.
-
----
-
-## 🔗 Repository
-
-GitHub: [Sands225/Healthy-Life_Mobile-Apps](https://github.com/Sands225/Healthy-Life_Mobile-Apps.git)
+</div>
