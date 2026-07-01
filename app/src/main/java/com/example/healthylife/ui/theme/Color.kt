@@ -31,6 +31,11 @@ val LightTextSecondary = Color(0xFF2A4D38)
 val LightTextMuted     = Color(0xFF5D8A70)
 
 // ── Dynamic Color Getters ─────────────────────────────────────────────────────
+val HeaderStart: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (LocalDarkTheme.current) Color(0xFF0A2218) else Color(0xFFE2F3E9)
+
 val DeepNavy: Color
     @Composable
     @ReadOnlyComposable

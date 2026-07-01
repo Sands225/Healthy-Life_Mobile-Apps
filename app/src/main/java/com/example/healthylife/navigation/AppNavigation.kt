@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.*
+import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.ui.screens.*
 import com.example.healthylife.ui.theme.*
 
@@ -16,7 +17,7 @@ data class NavItem(
 )
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(repository: HealthRepository) {
 
     val navController = rememberNavController()
 
@@ -73,11 +74,11 @@ fun AppNavigation() {
             navController    = navController,
             startDestination = "home"
         ) {
-            composable("home")      { HomeScreen(innerPadding) }
-            composable("exercise")  { ExerciseScreen(innerPadding) }
-            composable("nutrition") { NutritionScreen(innerPadding) }
-            composable("sleep")     { SleepScreen(innerPadding) }
-            composable("profile")   { ProfileScreen(innerPadding) }
+            composable("home")      { HomeScreen(innerPadding, repository) }
+            composable("exercise")  { ExerciseScreen(innerPadding, repository) }
+            composable("nutrition") { NutritionScreen(innerPadding, repository) }
+            composable("sleep")     { SleepScreen(innerPadding, repository) }
+            composable("profile")   { ProfileScreen(innerPadding, repository) }
         }
     }
 }

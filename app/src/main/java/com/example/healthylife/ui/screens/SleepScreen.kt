@@ -21,23 +21,93 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthylife.data.DummyData
+import com.example.healthylife.data.HealthRepository
+import com.example.healthylife.model.SleepRecord
 import com.example.healthylife.ui.theme.*
 
 @Composable
-fun SleepScreen(padding: PaddingValues) {
+fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
 
-    val sleepRecord = DummyData.lastNightSleep
-    val allRecords = DummyData.sleepRecords
+    var user by remember { mutableStateOf(DummyData.currentUser) }
+    val allRecords = remember { mutableStateListOf<SleepRecord>() }
 
-    var selected by remember { mutableStateOf(sleepRecord.quality) }
-    var bedTime by remember { mutableStateOf(sleepRecord.bedTime) }
-    var wakeTime by remember { mutableStateOf(sleepRecord.wakeTime) }
+    LaunchedEffect(Unit) {
+        repository.getUser(1)?.let { user = it }
+        val dbSleep = repository.getAllSleepRecords()
+        allRecords.clear()
+        allRecords.addAll(dbSleep.ifEmpty { DummyData.sleepRecords })
+    }
+
+    val sleepRecord = allRecords.firstOrNull() ?: DummyData.lastNightSleep
+
+    var selected by remember(sleepRecord.quality) { mutableStateOf(sleepRecord.quality) }
+    var bedTime by remember(sleepRecord.bedTime) { mutableStateOf(sleepRecord.bedTime) }
+    var wakeTime by remember(sleepRecord.wakeTime) { mutableStateOf(sleepRecord.wakeTime) }
 
     val qualityOptions = listOf(
         Triple("😴", "Excellent", HealthGreen),
         Triple("🙂", "Normal",    AccentTeal),
         Triple("🥱", "Poor",      CardPink)
     )
+
+    var showBedTimeDialog by remember { mutableStateOf(false) }
+    var showWakeTimeDialog by remember { mutableStateOf(false) }
+
+    if (showBedTimeDialog) {
+        AlertDialog(
+            onDismissRequest = { showBedTimeDialog = false },
+            containerColor = Slate,
+            shape = RoundedCornerShape(20.dp),
+            title = { Text("Ubah Jam Tidur", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = bedTime,
+                    onValueChange = { bedTime = it },
+                    label = { Text("Jam Tidur (Format JJ:MM)") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = HealthGreen,
+                        unfocusedBorderColor = SlateLight,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showBedTimeDialog = false }) {
+                    Text("OK", color = HealthGreen)
+                }
+            }
+        )
+    }
+
+    if (showWakeTimeDialog) {
+        AlertDialog(
+            onDismissRequest = { showWakeTimeDialog = false },
+            containerColor = Slate,
+            shape = RoundedCornerShape(20.dp),
+            title = { Text("Ubah Jam Bangun", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = wakeTime,
+                    onValueChange = { wakeTime = it },
+                    label = { Text("Jam Bangun (Format JJ:MM)") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = HealthGreen,
+                        unfocusedBorderColor = SlateLight,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showWakeTimeDialog = false }) {
+                    Text("OK", color = HealthGreen)
+                }
+            }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -53,7 +123,7 @@ fun SleepScreen(padding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
+                        Brush.verticalGradient(listOf(HeaderStart, DeepNavy))
                     )
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
@@ -126,13 +196,14 @@ fun SleepScreen(padding: PaddingValues) {
 
                     Spacer(Modifier.height(20.dp))
 
+                    val calculatedDuration = calculateSleepDuration(bedTime, wakeTime)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Text(
-                            "${sleepRecord.durationHours.toInt()}",
+                            "${calculatedDuration.toInt()}",
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 60.sp
@@ -153,7 +224,9 @@ fun SleepScreen(padding: PaddingValues) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        SleepStatItem("🌙", "Tidur", sleepRecord.bedTime)
+                        Box(modifier = Modifier.clickable { showBedTimeDialog = true }) {
+                            SleepStatItem("🌙", "Tidur", bedTime)
+                        }
                         Box(
                             modifier = Modifier
                                 .width(60.dp)
@@ -161,7 +234,9 @@ fun SleepScreen(padding: PaddingValues) {
                                 .background(Brush.linearGradient(listOf(HealthGreen, AccentTeal)))
                                 .align(Alignment.CenterVertically)
                         )
-                        SleepStatItem("☀️", "Bangun", sleepRecord.wakeTime)
+                        Box(modifier = Modifier.clickable { showWakeTimeDialog = true }) {
+                            SleepStatItem("☀️", "Bangun", wakeTime)
+                        }
                     }
 
                     Spacer(Modifier.height(16.dp))
@@ -169,6 +244,7 @@ fun SleepScreen(padding: PaddingValues) {
                     Spacer(Modifier.height(16.dp))
 
                     // Avg sleep
+                    val avgSleepHours = if (allRecords.isNotEmpty()) allRecords.map { it.durationHours }.average().toFloat() else 8f
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -176,7 +252,7 @@ fun SleepScreen(padding: PaddingValues) {
                         Column {
                             Text("Rata-rata Minggu Ini", color = TextMuted, fontSize = 11.sp)
                             Text(
-                                "${String.format("%.1f", DummyData.avgSleepHours)} jam",
+                                "${String.format("%.1f", avgSleepHours)} jam",
                                 color = AccentTeal,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -185,7 +261,7 @@ fun SleepScreen(padding: PaddingValues) {
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Target Harian", color = TextMuted, fontSize = 11.sp)
                             Text(
-                                "${DummyData.currentUser.targetSleepHours.toInt()} jam",
+                                "${user.targetSleepHours.toInt()} jam",
                                 color = TextSecondary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -253,7 +329,7 @@ fun SleepScreen(padding: PaddingValues) {
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    DummyData.weekDayLabels[i],
+                                    DummyData.weekDayLabels[i % DummyData.weekDayLabels.size],
                                     color = if (i == allRecords.size - 1) HealthGreen else TextMuted,
                                     fontSize = 9.sp,
                                     fontWeight = if (i == allRecords.size - 1) FontWeight.Bold else FontWeight.Normal
@@ -380,7 +456,23 @@ fun SleepScreen(padding: PaddingValues) {
                     .padding(horizontal = 20.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                    .clickable { }
+                    .clickable {
+                        val duration = calculateSleepDuration(bedTime, wakeTime)
+                        val newRecord = SleepRecord(
+                            id = 0,
+                            date = "Hari ini",
+                            bedTime = bedTime,
+                            wakeTime = wakeTime,
+                            durationHours = duration,
+                            quality = selected
+                        )
+                        repository.insertSleepRecord(newRecord)
+                        val dbSleep = repository.getAllSleepRecords()
+                        if (dbSleep.isNotEmpty()) {
+                            allRecords.clear()
+                            allRecords.addAll(dbSleep)
+                        }
+                    }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -404,4 +496,21 @@ private fun SleepStatItem(emoji: String, label: String, time: String) {
         Text(label, color = TextSecondary, fontSize = 11.sp)
         Text(time, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
     }
+}
+
+private fun calculateSleepDuration(bedTime: String, wakeTime: String): Float {
+    try {
+        val bedParts = bedTime.split(":")
+        val wakeParts = wakeTime.split(":")
+        if (bedParts.size == 2 && wakeParts.size == 2) {
+            val bedMin = bedParts[0].toInt() * 60 + bedParts[1].toInt()
+            var wakeMin = wakeParts[0].toInt() * 60 + wakeParts[1].toInt()
+            if (wakeMin < bedMin) {
+                wakeMin += 24 * 60
+            }
+            return (wakeMin - bedMin) / 60.0f
+        }
+    } catch (e: Exception) {
+    }
+    return 8.0f
 }

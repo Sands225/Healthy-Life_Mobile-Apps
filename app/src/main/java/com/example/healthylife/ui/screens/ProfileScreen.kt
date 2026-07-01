@@ -3,6 +3,7 @@ package com.example.healthylife.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,13 +19,32 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.*
 import com.example.healthylife.data.DummyData
+import com.example.healthylife.data.HealthRepository
+import com.example.healthylife.model.User
 import com.example.healthylife.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(padding: PaddingValues) {
+fun ProfileScreen(padding: PaddingValues, repository: HealthRepository) {
 
-    val user = DummyData.currentUser
+    var user by remember { mutableStateOf(DummyData.currentUser) }
+    
+    LaunchedEffect(Unit) {
+        repository.getUser(1)?.let { user = it }
+    }
+
+    var showEditProfileSheet by remember { mutableStateOf(false) }
+
+    var editName by remember { mutableStateOf("") }
+    var editAge by remember { mutableStateOf("") }
+    var editHeight by remember { mutableStateOf("") }
+    var editWeight by remember { mutableStateOf("") }
+    var editTargetCalories by remember { mutableStateOf("") }
+    var editTargetSleepHours by remember { mutableStateOf("") }
+    var editTargetExerciseMinutes by remember { mutableStateOf("") }
+
     val bmi = user.weight / ((user.height / 100f) * (user.height / 100f))
 
     Column(
@@ -39,7 +59,7 @@ fun ProfileScreen(padding: PaddingValues) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
+                    Brush.verticalGradient(listOf(HeaderStart, DeepNavy))
                 )
                 .padding(vertical = 36.dp),
             contentAlignment = Alignment.Center
@@ -100,11 +120,154 @@ fun ProfileScreen(padding: PaddingValues) {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+    if (showEditProfileSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditProfileSheet = false },
+            containerColor = Slate,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 8.dp)
+            ) {
+                item {
+                    Text(
+                        "Edit Profil",
+                        color = TextPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Perbarui informasi personal dan target kebugaranmu",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    HorizontalDivider(color = SlateLight)
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Nama Lengkap") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = profileTextFieldColors()
+                    )
+                }
+
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = editAge,
+                            onValueChange = { editAge = it.filter { c -> c.isDigit() } },
+                            label = { Text("Umur (tahun)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                        OutlinedTextField(
+                            value = editHeight,
+                            onValueChange = { editHeight = it.filter { c -> c.isDigit() } },
+                            label = { Text("Tinggi (cm)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                        OutlinedTextField(
+                            value = editWeight,
+                            onValueChange = { editWeight = it },
+                            label = { Text("Berat (kg)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                    }
+                }
+
+                item {
+                    Text("Target Harian", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = editTargetCalories,
+                            onValueChange = { editTargetCalories = it.filter { c -> c.isDigit() } },
+                            label = { Text("Kalori (kcal)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                        OutlinedTextField(
+                            value = editTargetSleepHours,
+                            onValueChange = { editTargetSleepHours = it },
+                            label = { Text("Tidur (jam)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                        OutlinedTextField(
+                            value = editTargetExerciseMinutes,
+                            onValueChange = { editTargetExerciseMinutes = it.filter { c -> c.isDigit() } },
+                            label = { Text("Olahraga (mnt)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = profileTextFieldColors()
+                        )
+                    }
+                }
+
+                item {
+                    val canSave = editName.isNotBlank()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (canSave) Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                                else Brush.linearGradient(listOf(SlateLight, SlateLight))
+                            )
+                            .clickable(enabled = canSave) {
+                                val updatedUser = User(
+                                    id = user.id,
+                                    name = editName.trim(),
+                                    age = editAge.toIntOrNull() ?: user.age,
+                                    weight = editWeight.toFloatOrNull() ?: user.weight,
+                                    height = editHeight.toFloatOrNull() ?: user.height,
+                                    targetCalories = editTargetCalories.toIntOrNull() ?: user.targetCalories,
+                                    targetSleepHours = editTargetSleepHours.toFloatOrNull() ?: user.targetSleepHours,
+                                    targetExerciseMinutes = editTargetExerciseMinutes.toIntOrNull() ?: user.targetExerciseMinutes,
+                                    streakDays = user.streakDays
+                                )
+                                repository.updateUser(updatedUser)
+                                user = updatedUser
+                                showEditProfileSheet = false
+                            }
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Simpan Perubahan",
+                            color = if (canSave) DeepNavy else TextMuted,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(padding)
+    ) {
 
             // ── Stats Row ─────────────────────────────────────────────────────
             Row(
@@ -214,7 +377,16 @@ fun ProfileScreen(padding: PaddingValues) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                    .clickable { }
+                    .clickable {
+                        editName = user.name
+                        editAge = user.age.toString()
+                        editHeight = user.height.toInt().toString()
+                        editWeight = user.weight.toInt().toString()
+                        editTargetCalories = user.targetCalories.toString()
+                        editTargetSleepHours = user.targetSleepHours.toString()
+                        editTargetExerciseMinutes = user.targetExerciseMinutes.toString()
+                        showEditProfileSheet = true
+                    }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -266,3 +438,16 @@ private fun ProfileStatCard(
         }
     }
 }
+
+@Composable
+private fun profileTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = HealthGreen,
+    unfocusedBorderColor = SlateLight,
+    focusedLabelColor = HealthGreen,
+    unfocusedLabelColor = TextSecondary,
+    cursorColor = HealthGreen,
+    focusedTextColor = TextPrimary,
+    unfocusedTextColor = TextPrimary,
+    unfocusedContainerColor = SlateLighter,
+    focusedContainerColor = SlateLighter
+)

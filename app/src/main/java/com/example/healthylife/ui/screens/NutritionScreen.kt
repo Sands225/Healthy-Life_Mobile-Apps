@@ -24,19 +24,29 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthylife.data.DummyData
+import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Food
 import com.example.healthylife.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NutritionScreen(padding: PaddingValues) {
+fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
 
     var search by remember { mutableStateOf("") }
     var selectedMeal by remember { mutableStateOf("Semua") }
 
+    var user by remember { mutableStateOf(DummyData.currentUser) }
+
     // ── State untuk daftar makanan (bisa ditambah custom) ─────────────────
     val foodList = remember {
-        mutableStateListOf(*DummyData.foods.toTypedArray())
+        mutableStateListOf<Food>()
+    }
+
+    LaunchedEffect(Unit) {
+        repository.getUser(1)?.let { user = it }
+        val dbFoods = repository.getAllFoods()
+        foodList.clear()
+        foodList.addAll(dbFoods.ifEmpty { DummyData.foods })
     }
 
     val mealTypes = listOf(
@@ -283,7 +293,7 @@ fun NutritionScreen(padding: PaddingValues) {
                             )
                             .clickable(enabled = canSave) {
                                 val newFood = Food(
-                                    id = foodList.size + 1,
+                                    id = 0,
                                     name = newFoodName.trim(),
                                     emoji = newFoodEmoji,
                                     calories = newFoodCalories.toIntOrNull() ?: 0,
@@ -394,11 +404,11 @@ fun NutritionScreen(padding: PaddingValues) {
                             NutritionDbPreviewRow("Lemak", "${food.fat.toInt()} g")
                             NutritionDbPreviewRow("Tipe Makan", food.mealType)
                         } else {
-                            NutritionDbPreviewRow("Pengguna", DummyData.currentUser.name)
+                            NutritionDbPreviewRow("Pengguna", user.name)
                             NutritionDbPreviewRow("Total Kalori Hari Ini", "${foodList.take(5).sumOf { it.calories }} kcal")
                             NutritionDbPreviewRow("Tanggal", "Hari ini")
                         }
-                        NutritionDbPreviewRow("Pengguna", DummyData.currentUser.name)
+                        NutritionDbPreviewRow("Pengguna", user.name)
                     }
                 }
 
@@ -467,7 +477,17 @@ fun NutritionScreen(padding: PaddingValues) {
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
                             .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                            .clickable { saveSuccess = true }
+                            .clickable {
+                                val foodToSave = selectedFoodForDb
+                                if (foodToSave != null) {
+                                    val id = repository.insertFood(foodToSave)
+                                    val idx = foodList.indexOf(foodToSave)
+                                    if (idx != -1) {
+                                        foodList[idx] = foodToSave.copy(id = id.toInt())
+                                    }
+                                }
+                                saveSuccess = true
+                            }
                             .padding(vertical = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -503,7 +523,7 @@ fun NutritionScreen(padding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
+                        Brush.verticalGradient(listOf(HeaderStart, DeepNavy))
                     )
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
@@ -568,14 +588,14 @@ fun NutritionScreen(padding: PaddingValues) {
                                     fontSize = 30.sp
                                 )
                                 Text(
-                                    " / ${DummyData.currentUser.targetCalories} kcal",
+                                    " / ${user.targetCalories} kcal",
                                     color = TextSecondary,
                                     fontSize = 13.sp
                                 )
                             }
                         }
                         Text(
-                            "${((totalCalToday.toFloat() / DummyData.currentUser.targetCalories) * 100).toInt()}%",
+                            "${((totalCalToday.toFloat() / user.targetCalories) * 100).toInt()}%",
                             color = HealthGreen,
                             fontWeight = FontWeight.Bold,
                             fontSize = 22.sp

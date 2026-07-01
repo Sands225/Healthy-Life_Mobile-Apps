@@ -31,15 +31,52 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthylife.data.DummyData
+import com.example.healthylife.data.HealthRepository
+import com.example.healthylife.model.Exercise
+import com.example.healthylife.model.Food
+import com.example.healthylife.model.SleepRecord
+import com.example.healthylife.model.User
 import com.example.healthylife.ui.theme.*
 
 @Composable
-fun HomeScreen(padding: PaddingValues) {
+fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
 
-    val user = DummyData.currentUser
-    val sleep = DummyData.lastNightSleep
-    val totalCalories = DummyData.totalCaloriesToday
-    val exerciseMinutes = DummyData.todayExerciseMinutes
+    var user by remember { mutableStateOf(DummyData.currentUser) }
+    var sleepRecords by remember { mutableStateOf(DummyData.sleepRecords) }
+    var exercises by remember { mutableStateOf(DummyData.exercises) }
+    var foods by remember { mutableStateOf(DummyData.foods) }
+
+    LaunchedEffect(Unit) {
+        repository.getUser(1)?.let { user = it }
+        val dbSleep = repository.getAllSleepRecords()
+        if (dbSleep.isNotEmpty()) sleepRecords = dbSleep
+        
+        val dbExercises = repository.getAllExercises()
+        if (dbExercises.isNotEmpty()) exercises = dbExercises
+        
+        val dbFoods = repository.getAllFoods()
+        if (dbFoods.isNotEmpty()) foods = dbFoods
+    }
+
+    val sleep = sleepRecords.firstOrNull() ?: DummyData.lastNightSleep
+    val todayExercises = exercises.filter { it.date == "Hari ini" }
+    val todayFoods = foods.take(5)
+
+    val totalCalories = todayFoods.sumOf { it.calories }
+    val exerciseMinutes = todayExercises.sumOf { it.durationMinutes }
+
+    val totalCarbsToday = todayFoods.sumOf { it.carbs.toDouble() }.toFloat()
+    val totalProteinToday = todayFoods.sumOf { it.protein.toDouble() }.toFloat()
+    val totalFatToday = todayFoods.sumOf { it.fat.toDouble() }.toFloat()
+
+    val avgSleepHours = if (sleepRecords.isNotEmpty()) sleepRecords.map { it.durationHours }.average().toFloat() else 8f
+    val todayCaloriesBurned = todayExercises.sumOf { it.caloriesBurned }
+    val smartInsights = listOf(
+        "Target mingguan kamu hampir tercapai! Tetap semangat 💪",
+        "Tidurmu rata-rata ${String.format("%.1f", avgSleepHours)} jam — sangat baik!",
+        "Kamu sudah membakar ${todayCaloriesBurned} kcal hari ini 🔥",
+        "Streak ${user.streakDays} hari berturut-turut! Luar biasa! 🏆"
+    )
 
     // Animasi progress
     var showProgress by remember { mutableStateOf(false) }
@@ -132,7 +169,21 @@ fun HomeScreen(padding: PaddingValues) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(HealthGreen)
-                        .clickable { showSleepDialog = false }
+                        .clickable {
+                            val hours = sleepHoursInput.toFloatOrNull() ?: 8f
+                            val newRecord = SleepRecord(
+                                id = 0,
+                                date = "Hari ini",
+                                bedTime = "22:00",
+                                wakeTime = "${if (22 + hours.toInt() >= 24) 22 + hours.toInt() - 24 else 22 + hours.toInt()}:00",
+                                durationHours = hours,
+                                quality = "Normal"
+                            )
+                            repository.insertSleepRecord(newRecord)
+                            val dbSleep = repository.getAllSleepRecords()
+                            if (dbSleep.isNotEmpty()) sleepRecords = dbSleep
+                            showSleepDialog = false
+                        }
                         .padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text("Simpan", color = DeepNavy, fontWeight = FontWeight.Bold)
@@ -198,7 +249,17 @@ fun HomeScreen(padding: PaddingValues) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(HealthGreen)
-                        .clickable { showNutritionDialog = false }
+                        .clickable {
+                            val selectedFoodName = caloriesInput
+                            val foodToLog = DummyData.foods.find { it.name == selectedFoodName }
+                            if (foodToLog != null) {
+                                val newFoodLog = foodToLog.copy(id = 0)
+                                repository.insertFood(newFoodLog)
+                                val dbFoods = repository.getAllFoods()
+                                if (dbFoods.isNotEmpty()) foods = dbFoods
+                            }
+                            showNutritionDialog = false
+                        }
                         .padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text("Tambah", color = DeepNavy, fontWeight = FontWeight.Bold)
@@ -275,7 +336,21 @@ fun HomeScreen(padding: PaddingValues) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(HealthGreen)
-                        .clickable { showExerciseDialog = false }
+                        .clickable {
+                            val mins = exerciseMinsInput.toIntOrNull() ?: 30
+                            val newExerciseLog = Exercise(
+                                id = 0,
+                                name = "Running",
+                                emoji = "🏃",
+                                durationMinutes = mins,
+                                caloriesBurned = mins * 9,
+                                date = "Hari ini"
+                            )
+                            repository.insertExercise(newExerciseLog)
+                            val dbExercises = repository.getAllExercises()
+                            if (dbExercises.isNotEmpty()) exercises = dbExercises
+                            showExerciseDialog = false
+                        }
                         .padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text("Simpan", color = DeepNavy, fontWeight = FontWeight.Bold)
@@ -304,7 +379,7 @@ fun HomeScreen(padding: PaddingValues) {
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFF0A2218), DeepNavy)
+                            colors = listOf(HeaderStart, DeepNavy)
                         )
                     )
                     .padding(horizontal = 20.dp, vertical = 28.dp)
@@ -523,7 +598,7 @@ fun HomeScreen(padding: PaddingValues) {
             Spacer(Modifier.height(12.dp))
         }
 
-        items(DummyData.todayExercises) { ex ->
+        items(todayExercises) { ex ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -608,16 +683,16 @@ fun HomeScreen(padding: PaddingValues) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        MacroChip("Karbo", "${DummyData.totalCarbsToday.toInt()}g", HealthGreen)
-                        MacroChip("Protein", "${DummyData.totalProteinToday.toInt()}g", AccentTeal)
-                        MacroChip("Lemak", "${DummyData.totalFatToday.toInt()}g", AccentSage)
+                        MacroChip("Karbo", "${totalCarbsToday.toInt()}g", HealthGreen)
+                        MacroChip("Protein", "${totalProteinToday.toInt()}g", AccentTeal)
+                        MacroChip("Lemak", "${totalFatToday.toInt()}g", AccentSage)
                     }
                 }
             }
             Spacer(Modifier.height(10.dp))
         }
 
-        items(DummyData.todayFoods.take(3)) { food ->
+        items(todayFoods.take(3)) { food ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -662,7 +737,7 @@ fun HomeScreen(padding: PaddingValues) {
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(DummyData.smartInsights) { insight ->
+                items(smartInsights) { insight ->
                     Card(
                         modifier = Modifier.width(220.dp),
                         shape = RoundedCornerShape(16.dp),

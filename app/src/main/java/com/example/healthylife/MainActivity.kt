@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.navigation.AppNavigation
 import com.example.healthylife.ui.theme.HealthyLifeTheme
 import com.example.healthylife.ui.theme.LocalDarkTheme
@@ -15,13 +16,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             var isDarkTheme by rememberSaveable { mutableStateOf(true) }
+            val repository = remember { HealthRepository(applicationContext) }
             
             CompositionLocalProvider(
                 LocalDarkTheme provides isDarkTheme,
                 LocalThemeToggle provides { isDarkTheme = !isDarkTheme }
             ) {
                 HealthyLifeTheme(darkTheme = isDarkTheme) {
-                    AppNavigation()
+                    AppNavigation(repository = repository)
                 }
             }
         }

@@ -23,661 +23,124 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.view.ViewGroup
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.ui.platform.ComposeView
 import com.example.healthylife.data.DummyData
+import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Exercise
 import com.example.healthylife.ui.theme.*
 
-private data class ActivityItem(
+// Template aktivitas untuk shortcut / fast-add
+private data class ActivityTemplate(
     val emoji: String,
     val name: String,
     val caloriesPerMin: Int
 )
 
+private class ExerciseViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
+
+private class ExerciseAdapter(
+    private var items: List<Exercise>,
+    private val isDarkTheme: Boolean
+) : RecyclerView.Adapter<ExerciseViewHolder>() {
+
+    fun updateItems(newItems: List<Exercise>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
+        val composeView = ComposeView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        return ExerciseViewHolder(composeView)
+    }
+
+    override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
+        val item = items[position]
+        holder.composeView.setContent {
+            CompositionLocalProvider(
+                LocalDarkTheme provides isDarkTheme
+            ) {
+                Box(modifier = Modifier.padding(vertical = 4.dp)) {
+                    ExerciseHistoryItem(item)
+                }
+            }
+        }
+    }
+
+    override fun getItemCount(): Int = items.size
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ExerciseScreen — UI Utama
+// Berisi: Header · Summary Hari Ini · Riwayat · FAB Tambah
+// ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseScreen(padding: PaddingValues) {
+fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
-    var duration by remember { mutableFloatStateOf(30f) }
-    var selectedActivity by remember { mutableStateOf("Running") }
-    var logSaved by remember { mutableStateOf(false) }
+    // ── Data riwayat ─────────────────────────────────────────────────────────
+    val exerciseHistory = remember { mutableStateListOf<Exercise>() }
 
-    // ── State untuk daftar aktivitas (bisa ditambah custom) ──────────────
-    val activities = remember {
+    LaunchedEffect(Unit) {
+        val dbExercises = repository.getAllExercises()
+        exerciseHistory.clear()
+        exerciseHistory.addAll(dbExercises.ifEmpty { DummyData.exercises })
+    }
+
+    // ── Template aktivitas (shortcut) — bisa ditambah dari "Buat Shortcut" ──
+    val activityTemplates = remember {
         mutableStateListOf(
-            ActivityItem("🏃", "Running",  10),
-            ActivityItem("🚶", "Walking",  4),
-            ActivityItem("🧘", "Yoga",     4),
-            ActivityItem("🏋️", "Gym",     9),
-            ActivityItem("🚴", "Cycling",  8),
-            ActivityItem("🏊", "Swimming", 11)
+            ActivityTemplate("🏃", "Running",  10),
+            ActivityTemplate("🚶", "Walking",  4),
+            ActivityTemplate("🧘", "Yoga",     4),
+            ActivityTemplate("🏋️", "Gym",     9),
+            ActivityTemplate("🚴", "Cycling",  8),
+            ActivityTemplate("🏊", "Swimming", 11)
         )
     }
 
-    // ── State untuk riwayat exercise ─────────────────────────────────────
-    val exerciseHistory = remember {
-        mutableStateListOf(*DummyData.exercises.toTypedArray())
+    // ── Bottom-sheet control ──────────────────────────────────────────────────
+    var showAddSheet by remember { mutableStateOf(false) }
+
+    // ── Render Sheet ──────────────────────────────────────────────────────────
+    if (showAddSheet) {
+        AddActivitySheet(
+            templates = activityTemplates,
+            onDismiss = { showAddSheet = false },
+            onAddTemplate = { t -> activityTemplates.add(t) },
+            onLogActivity = { exercise ->
+                val id = repository.insertExercise(exercise)
+                exerciseHistory.add(0, exercise.copy(id = id.toInt()))
+                showAddSheet = false
+            }
+        )
     }
 
-    // ── Bottom Sheet: Tambah Aktivitas ────────────────────────────────────
-    var showAddActivitySheet by remember { mutableStateOf(false) }
-    var newActivityName by remember { mutableStateOf("") }
-    var newActivityEmoji by remember { mutableStateOf("") }
-    var newActivityCalPerMin by remember { mutableStateOf("") }
-
-    // ── Bottom Sheet: Tambah ke Database ─────────────────────────────────
-    var showSaveToDbSheet by remember { mutableStateOf(false) }
-    var saveSuccess by remember { mutableStateOf(false) }
-
-    val selectedItem = activities.find { it.name == selectedActivity } ?: activities[0]
-    val estimatedCals = (duration * selectedItem.caloriesPerMin).toInt()
-
-    // ── Bottom Sheet: Tambah Aktivitas Baru ───────────────────────────────
-    if (showAddActivitySheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showAddActivitySheet = false
-                newActivityName = ""
-                newActivityEmoji = ""
-                newActivityCalPerMin = ""
-            },
-            containerColor = Slate,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    // ── Main UI ───────────────────────────────────────────────────────────────
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-                    .padding(bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            "Tambah Aktivitas",
-                            color = TextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Buat aktivitas olahraga kustommu",
-                            color = TextSecondary,
-                            fontSize = 12.sp
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(SlateLight)
-                            .clickable {
-                                showAddActivitySheet = false
-                                newActivityName = ""
-                                newActivityEmoji = ""
-                                newActivityCalPerMin = ""
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Close, null, tint = TextMuted, modifier = Modifier.size(18.dp))
-                    }
-                }
+            // Header
+            ExerciseHeader()
 
-                HorizontalDivider(color = SlateLight)
-
-                // Pilih Emoji
-                Text("Pilih Ikon Aktivitas", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                val emojiOptions = listOf("🏃", "🚶", "🧘", "🏋️", "🚴", "🏊", "⛷️", "🤸", "🥊", "🏸", "⚽", "🎾", "🧗", "🤽", "🏇")
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(5),
-                    modifier = Modifier.height(130.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    userScrollEnabled = false
-                ) {
-                    items(emojiOptions) { emoji ->
-                        val isSelected = newActivityEmoji == emoji
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) HealthGreen.copy(0.2f) else SlateLighter)
-                                .border(1.dp, if (isSelected) HealthGreen else Color.Transparent, RoundedCornerShape(12.dp))
-                                .clickable { newActivityEmoji = emoji },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(emoji, fontSize = 22.sp)
-                        }
-                    }
-                }
-
-                // Input Nama
-                OutlinedTextField(
-                    value = newActivityName,
-                    onValueChange = { newActivityName = it },
-                    label = { Text("Nama Aktivitas") },
-                    placeholder = { Text("Contoh: Zumba, Badminton...", color = TextMuted) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = HealthGreen,
-                        unfocusedBorderColor = SlateLight,
-                        focusedLabelColor = HealthGreen,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = HealthGreen,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        unfocusedContainerColor = SlateLighter,
-                        focusedContainerColor = SlateLighter
-                    )
-                )
-
-                // Input Kalori per Menit
-                OutlinedTextField(
-                    value = newActivityCalPerMin,
-                    onValueChange = { newActivityCalPerMin = it.filter { c -> c.isDigit() } },
-                    label = { Text("Kalori per Menit (kcal)") },
-                    placeholder = { Text("Contoh: 7", color = TextMuted) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = HealthGreen,
-                        unfocusedBorderColor = SlateLight,
-                        focusedLabelColor = HealthGreen,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = HealthGreen,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        unfocusedContainerColor = SlateLighter,
-                        focusedContainerColor = SlateLighter
-                    )
-                )
-
-                // Tombol Simpan
-                val canSave = newActivityName.isNotBlank() && newActivityEmoji.isNotEmpty() && newActivityCalPerMin.isNotBlank()
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            if (canSave)
-                                Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
-                            else
-                                Brush.linearGradient(listOf(SlateLight, SlateLight))
-                        )
-                        .clickable(enabled = canSave) {
-                            activities.add(
-                                ActivityItem(
-                                    emoji = newActivityEmoji,
-                                    name = newActivityName.trim(),
-                                    caloriesPerMin = newActivityCalPerMin.toIntOrNull() ?: 5
-                                )
-                            )
-                            selectedActivity = newActivityName.trim()
-                            showAddActivitySheet = false
-                            newActivityName = ""
-                            newActivityEmoji = ""
-                            newActivityCalPerMin = ""
-                        }
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Add, null, tint = if (canSave) DeepNavy else TextMuted)
-                        Text(
-                            "Tambahkan Aktivitas",
-                            color = if (canSave) DeepNavy else TextMuted,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    // ── Bottom Sheet: Simpan ke Database ──────────────────────────────────
-    if (showSaveToDbSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showSaveToDbSheet = false
-                saveSuccess = false
-            },
-            containerColor = Slate,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-                    .padding(bottom = 48.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            "Simpan ke Database",
-                            color = TextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Simpan log olahraga ke server",
-                            color = TextSecondary,
-                            fontSize = 12.sp
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(SlateLight)
-                            .clickable { showSaveToDbSheet = false; saveSuccess = false },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Close, null, tint = TextMuted, modifier = Modifier.size(18.dp))
-                    }
-                }
-
-                HorizontalDivider(color = SlateLight)
-
-                // Preview data yang akan disimpan
-                Text("Data yang Akan Disimpan", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = SlateLighter),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DbPreviewRow("Aktivitas", "${selectedItem.emoji} ${selectedItem.name}")
-                        DbPreviewRow("Durasi", "${duration.toInt()} menit")
-                        DbPreviewRow("Kalori Terbakar", "~$estimatedCals kcal")
-                        DbPreviewRow("Tanggal", "Hari ini")
-                        DbPreviewRow("Pengguna", DummyData.currentUser.name)
-                    }
-                }
-
-                // Status koneksi database (simulasi)
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = AccentTeal.copy(0.08f)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentTeal.copy(0.25f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.size(8.dp).clip(CircleShape).background(AccentTeal)
-                        )
-                        Column {
-                            Text("Database Terhubung", color = AccentTeal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text("Siap menerima data latihan", color = TextSecondary, fontSize = 11.sp)
-                        }
-                    }
-                }
-
-                if (saveSuccess) {
-                    // Sukses state
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = HealthGreen.copy(0.1f)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, HealthGreen.copy(0.4f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(Icons.Default.CheckCircle, null, tint = HealthGreen, modifier = Modifier.size(28.dp))
-                            Column {
-                                Text("Berhasil Disimpan!", color = HealthGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text("Data latihan tersimpan ke database", color = TextSecondary, fontSize = 12.sp)
-                            }
-                        }
-                    }
-                    // Tombol Tutup
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                            .clickable { showSaveToDbSheet = false; saveSuccess = false; logSaved = true }
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Selesai", color = DeepNavy, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    }
-                } else {
-                    // Tombol Konfirmasi Simpan
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                            .clickable {
-                                // Tambahkan ke riwayat
-                                exerciseHistory.add(0,
-                                    Exercise(
-                                        id = exerciseHistory.size + 1,
-                                        name = selectedItem.name,
-                                        emoji = selectedItem.emoji,
-                                        durationMinutes = duration.toInt(),
-                                        caloriesBurned = estimatedCals,
-                                        date = "Hari ini"
-                                    )
-                                )
-                                saveSuccess = true
-                            }
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Default.CloudUpload, null, tint = DeepNavy)
-                            Text(
-                                "Simpan ke Database",
-                                color = DeepNavy,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(padding),
-        contentPadding = PaddingValues(bottom = 32.dp)
-    ) {
-
-        // ── Header ────────────────────────────────────────────────────────────
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(listOf(Color(0xFF0A2218), DeepNavy))
-                    )
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Exercise Log", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                        Text("Catat aktivitas harianmu", color = TextSecondary, fontSize = 13.sp)
-                    }
-
-                    val isDark = LocalDarkTheme.current
-                    val toggleTheme = LocalThemeToggle.current
-
-                    IconButton(
-                        onClick = toggleTheme,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(GlassWhite)
-                    ) {
-                        Icon(
-                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = "Ubah Tema",
-                            tint = HealthGreen
-                        )
-                    }
-                }
-            }
-        }
-
-        // ── Today's Summary ───────────────────────────────────────────────────
-        item {
+            // Summary hari ini
             Spacer(Modifier.height(20.dp))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    val todayLogs = exerciseHistory.filter { it.date == "Hari ini" }
-                    ExerciseStat("⏱️", "${todayLogs.sumOf { it.durationMinutes }}", "menit", "Durasi Hari Ini", HealthGreen)
-                    Box(modifier = Modifier.width(1.dp).height(50.dp).background(SlateLight))
-                    ExerciseStat("🔥", "${todayLogs.sumOf { it.caloriesBurned }}", "kcal", "Kalori Terbakar", AccentTeal)
-                    Box(modifier = Modifier.width(1.dp).height(50.dp).background(SlateLight))
-                    ExerciseStat("💪", "${todayLogs.size}", "sesi", "Sesi Hari Ini", AccentSage)
-                }
-            }
-        }
+            TodaySummaryCard(exerciseHistory)
 
-        // ── Activity Selection Grid ────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(24.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Pilih Aktivitas",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                // Tombol Tambah Aktivitas Custom
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(HealthGreen.copy(0.12f))
-                        .border(1.dp, HealthGreen.copy(0.3f), RoundedCornerShape(10.dp))
-                        .clickable { showAddActivitySheet = true }
-                        .padding(horizontal = 12.dp, vertical = 7.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Add, null, tint = HealthGreen, modifier = Modifier.size(15.dp))
-                        Text("Tambah", color = HealthGreen, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-
-        // ── Dynamic Grid (calculated height based on activities count) ─────────
-        item {
-            val rowCount = Math.ceil(activities.size / 3.0).toInt()
-            val gridHeight = (rowCount * 84 + (rowCount - 1) * 10).dp
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .height(gridHeight)
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                userScrollEnabled = false
-            ) {
-                items(activities) { item ->
-                    val isSelected = selectedActivity == item.name
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (isSelected)
-                                    Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
-                                else
-                                    Brush.linearGradient(listOf(Slate, Slate))
-                            )
-                            .then(
-                                if (!isSelected) Modifier.border(1.dp, SlateLight, RoundedCornerShape(14.dp))
-                                else Modifier
-                            )
-                            .clickable { selectedActivity = item.name }
-                            .padding(horizontal = 10.dp, vertical = 14.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(item.emoji, fontSize = 24.sp)
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                item.name,
-                                color = if (isSelected) DeepNavy else TextPrimary,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Duration Card ─────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(20.dp))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Durasi", color = TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                        Text(
-                            "${duration.toInt()} menit",
-                            color = HealthGreen,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Slider(
-                        value = duration,
-                        onValueChange = { duration = it },
-                        valueRange = 15f..120f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = HealthGreen,
-                            activeTrackColor = HealthGreen,
-                            inactiveTrackColor = SlateLight
-                        )
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("15 mnt", color = TextMuted, fontSize = 11.sp)
-                        Text("120 mnt", color = TextMuted, fontSize = 11.sp)
-                    }
-                    // Quick presets
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(15f, 30f, 45f, 60f).forEach { mins ->
-                            val isPreset = duration == mins
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (isPreset) HealthGreen else SlateLighter)
-                                    .clickable { duration = mins }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    "${mins.toInt()}m",
-                                    color = if (isPreset) DeepNavy else TextSecondary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Estimated Calories ────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(14.dp))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate),
-                border = androidx.compose.foundation.BorderStroke(1.dp, AccentTeal.copy(0.3f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(AccentTeal.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("🔥", fontSize = 22.sp)
-                    }
-                    Column {
-                        Text("Estimasi Kalori Terbakar", color = TextSecondary, fontSize = 12.sp)
-                        Text(
-                            "~$estimatedCals kcal",
-                            color = AccentTeal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("${selectedItem.caloriesPerMin} kcal", color = TextMuted, fontSize = 11.sp)
-                        Text("per menit", color = TextMuted, fontSize = 10.sp)
-                    }
-                }
-            }
-        }
-
-        // ── Riwayat Olahraga ──────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(24.dp))
+            // Label Riwayat
+            Spacer(Modifier.height(28.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -691,64 +154,379 @@ fun ExerciseScreen(padding: PaddingValues) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
-                Text(
-                    "${exerciseHistory.size} sesi",
-                    color = TextMuted,
-                    fontSize = 12.sp
-                )
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = AccentTeal.copy(0.12f)
+                ) {
+                    Text(
+                        "${exerciseHistory.size} sesi",
+                        color = AccentTeal,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
             Spacer(Modifier.height(12.dp))
+
+            // Daftar riwayat menggunakan native RecyclerView
+            if (exerciseHistory.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyHistoryState()
+                }
+            } else {
+                val isDarkTheme = LocalDarkTheme.current
+                val density = androidx.compose.ui.platform.LocalDensity.current
+                val bottomPaddingPx = with(density) { 88.dp.roundToPx() }
+                
+                AndroidView(
+                    factory = { context ->
+                        RecyclerView(context).apply {
+                            layoutManager = LinearLayoutManager(context)
+                            clipToPadding = false
+                            setPadding(0, 0, 0, bottomPaddingPx)
+                            adapter = ExerciseAdapter(exerciseHistory, isDarkTheme)
+                        }
+                    },
+                    update = { recyclerView ->
+                        (recyclerView.adapter as? ExerciseAdapter)?.updateItems(exerciseHistory)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+            }
         }
 
-        items(exerciseHistory) { ex ->
-            Card(
+        // FAB — Tambah Aktivitas (pojok kanan bawah, di atas bottom navbar)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    end = 24.dp,
+                    bottom = padding.calculateBottomPadding() + 16.dp
+                )
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Slate)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
+                    .clickable { showAddSheet = true }
+                    .padding(horizontal = 20.dp, vertical = 14.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(HealthGreen.copy(0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(ex.emoji, fontSize = 18.sp)
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(ex.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text("${ex.durationMinutes} menit · ${ex.caloriesBurned} kcal", color = TextSecondary, fontSize = 12.sp)
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(ex.date, color = TextMuted, fontSize = 11.sp)
-                    }
+                    Icon(Icons.Default.Add, null, tint = DeepNavy, modifier = Modifier.size(20.dp))
+                    Text(
+                        "Tambah Aktivitas",
+                        color = DeepNavy,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
+    }
+}
 
-        // ── Action Buttons ────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(24.dp))
-            Column(
+// ─────────────────────────────────────────────────────────────────────────────
+// AddActivitySheet — Bottom Sheet Tambah Aktivitas
+// Berisi: Tab "Quick Add" (shortcut) & "Manual"
+// ─────────────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddActivitySheet(
+    templates: List<ActivityTemplate>,
+    onDismiss: () -> Unit,
+    onAddTemplate: (ActivityTemplate) -> Unit,
+    onLogActivity: (Exercise) -> Unit
+) {
+    // Tab: 0 = Quick Add, 1 = Manual
+    var activeTab by remember { mutableIntStateOf(0) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Slate,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // ── Sheet Header ──────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Tambah Aktivitas",
+                        color = TextPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Pilih cara menambahkan aktivitasmu",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(SlateLight)
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Close, null, tint = TextMuted, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            // ── Tab Selector ──────────────────────────────────────────────────
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SlateLighter)
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Tombol Simpan ke Database
+                listOf(
+                    "⚡ Quick Add" to 0,
+                    "✏️ Manual Add" to 1
+                ).forEach { (label, idx) ->
+                    val selected = activeTab == idx
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (selected) HealthGreen else Color.Transparent)
+                            .clickable { activeTab = idx }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            label,
+                            color = if (selected) DeepNavy else TextSecondary,
+                            fontSize = 12.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(color = SlateLight)
+
+            // ── Tab Content ───────────────────────────────────────────────────
+            when (activeTab) {
+                0 -> QuickAddTab(
+                    templates = templates,
+                    onLog = onLogActivity,
+                    onAddTemplate = onAddTemplate
+                )
+                1 -> ManualAddTab(onLog = onLogActivity)
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab 0: Quick Add — pilih shortcut lalu log langsung
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun QuickAddTab(
+    templates: List<ActivityTemplate>,
+    onLog: (Exercise) -> Unit,
+    onAddTemplate: (ActivityTemplate) -> Unit
+) {
+    var selected by remember { mutableStateOf<ActivityTemplate?>(null) }
+    var duration by remember { mutableFloatStateOf(30f) }
+    var isCreatingShortcut by remember { mutableStateOf(false) }
+
+    if (isCreatingShortcut) {
+        CreateShortcutSubView(
+            onSave = { template ->
+                onAddTemplate(template)
+                isCreatingShortcut = false
+            },
+            onCancel = {
+                isCreatingShortcut = false
+            }
+        )
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Pilih Aktivitas", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = HealthGreen.copy(0.12f),
+                    modifier = Modifier.clickable { isCreatingShortcut = true }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Add, null, tint = HealthGreen, modifier = Modifier.size(14.dp))
+                        Text("Shortcut Baru", color = HealthGreen, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
+            // Grid shortcut aktivitas
+            val rowCount = Math.ceil(templates.size / 3.0).toInt()
+            val gridHeight = (rowCount * 84 + (rowCount - 1) * 10).dp
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .height(gridHeight)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                userScrollEnabled = false
+            ) {
+                items(templates) { t ->
+                    val isSelected = selected == t
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (isSelected)
+                                    Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                                else
+                                    Brush.linearGradient(listOf(SlateLighter, SlateLighter))
+                            )
+                            .then(
+                                if (!isSelected) Modifier.border(1.dp, SlateLight, RoundedCornerShape(14.dp))
+                                else Modifier
+                            )
+                            .clickable { selected = t }
+                            .padding(horizontal = 10.dp, vertical = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(t.emoji, fontSize = 24.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                t.name,
+                                color = if (isSelected) DeepNavy else TextPrimary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Slider durasi (muncul jika ada yang dipilih)
+            if (selected != null) {
+                HorizontalDivider(color = SlateLight)
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = SlateLighter),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Durasi", color = TextSecondary, fontSize = 13.sp)
+                            Text(
+                                "${duration.toInt()} menit",
+                                color = HealthGreen,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                        Slider(
+                            value = duration,
+                            onValueChange = { duration = it },
+                            valueRange = 5f..120f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = HealthGreen,
+                                activeTrackColor = HealthGreen,
+                                inactiveTrackColor = SlateLight
+                            )
+                        )
+                        // Quick preset
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(15f, 30f, 45f, 60f).forEach { m ->
+                                val isP = duration == m
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isP) HealthGreen else Slate)
+                                        .clickable { duration = m }
+                                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                                ) {
+                                    Text(
+                                        "${m.toInt()}m",
+                                        color = if (isP) DeepNavy else TextSecondary,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+
+                        // Estimasi kalori
+                        val cals = (duration * (selected?.caloriesPerMin ?: 0)).toInt()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(AccentTeal.copy(0.08f))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("🔥", fontSize = 16.sp)
+                            Text("Estimasi kalori terbakar:", color = TextSecondary, fontSize = 12.sp)
+                            Spacer(Modifier.weight(1f))
+                            Text("~$cals kcal", color = AccentTeal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+                }
+
+                // Tombol Log Sekarang
+                val t = selected!!
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(Brush.linearGradient(listOf(HealthGreen, HealthGreenDark)))
-                        .clickable { showSaveToDbSheet = true }
+                        .clickable {
+                            val cals = (duration * t.caloriesPerMin).toInt()
+                            onLog(
+                                Exercise(
+                                    id = 0,
+                                    name = t.name,
+                                    emoji = t.emoji,
+                                    durationMinutes = duration.toInt(),
+                                    caloriesBurned = cals,
+                                    date = "Hari ini"
+                                )
+                            )
+                        }
                         .padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -756,37 +534,280 @@ fun ExerciseScreen(padding: PaddingValues) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            Icons.Default.CloudUpload,
-                            null,
-                            tint = DeepNavy
-                        )
+                        Icon(Icons.Default.CheckCircle, null, tint = DeepNavy)
                         Text(
-                            "Simpan Log & Tambah ke Database",
+                            "Log ${t.name} · ${duration.toInt()} mnt",
                             color = DeepNavy,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
                     }
                 }
+            } else {
+                // Hint saat belum pilih
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SlateLight.copy(0.5f))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("👆 Pilih aktivitas di atas untuk mulai", color = TextMuted, fontSize = 13.sp)
+                }
+            }
+        }
+    }
+}
 
-                // Tombol Log Cepat (tanpa DB)
-                if (logSaved) {
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = HealthGreen.copy(0.1f)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, HealthGreen.copy(0.4f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(Icons.Default.CheckCircle, null, tint = HealthGreen, modifier = Modifier.size(22.dp))
-                            Text("Log berhasil disimpan ke database! ✓", color = HealthGreen, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                        }
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab 1: Manual Add — isi nama, emoji, durasi, kalori sendiri
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun ManualAddTab(onLog: (Exercise) -> Unit) {
+    var activityName by remember { mutableStateOf("") }
+    var selectedEmoji by remember { mutableStateOf("🏃") }
+    var durationText by remember { mutableStateOf("") }
+    var caloriesText by remember { mutableStateOf("") }
+
+    val emojiOptions = listOf("🏃","🚶","🧘","🏋️","🚴","🏊","⛷️","🤸","🥊","🏸","⚽","🎾","🧗","🤽","🏇")
+
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+        // Pilih emoji
+        Text("Pilih Ikon", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(5),
+            modifier = Modifier.height(165.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            userScrollEnabled = false
+        ) {
+            items(emojiOptions) { emoji ->
+                val isSel = selectedEmoji == emoji
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSel) HealthGreen.copy(0.2f) else SlateLighter)
+                        .border(1.dp, if (isSel) HealthGreen else Color.Transparent, RoundedCornerShape(12.dp))
+                        .clickable { selectedEmoji = emoji },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(emoji, fontSize = 22.sp)
+                }
+            }
+        }
+
+        // Nama aktivitas
+        ExerciseTextField(
+            value = activityName,
+            onValueChange = { activityName = it },
+            label = "Nama Aktivitas",
+            placeholder = "Contoh: Zumba, Badminton..."
+        )
+
+        // Durasi & Kalori (baris berdampingan)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ExerciseTextField(
+                value = durationText,
+                onValueChange = { durationText = it.filter(Char::isDigit) },
+                label = "Durasi (menit)",
+                placeholder = "30",
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.weight(1f)
+            )
+            ExerciseTextField(
+                value = caloriesText,
+                onValueChange = { caloriesText = it.filter(Char::isDigit) },
+                label = "Kalori (kcal)",
+                placeholder = "150",
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Tombol Simpan
+        val canLog = activityName.isNotBlank() && durationText.isNotBlank()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    if (canLog)
+                        Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                    else
+                        Brush.linearGradient(listOf(SlateLight, SlateLight))
+                )
+                .clickable(enabled = canLog) {
+                    onLog(
+                        Exercise(
+                            id = 0,
+                            name = activityName.trim(),
+                            emoji = selectedEmoji,
+                            durationMinutes = durationText.toIntOrNull() ?: 30,
+                            caloriesBurned = caloriesText.toIntOrNull() ?: 0,
+                            date = "Hari ini"
+                        )
+                    )
+                }
+                .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Default.Save, null, tint = if (canLog) DeepNavy else TextMuted)
+                Text(
+                    "Simpan Aktivitas",
+                    color = if (canLog) DeepNavy else TextMuted,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SubView: Buat Shortcut — diakses dari dalam Quick Add
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun CreateShortcutSubView(
+    onSave: (ActivityTemplate) -> Unit,
+    onCancel: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var selectedEmoji by remember { mutableStateOf("🏃") }
+    var calPerMin by remember { mutableStateOf("") }
+
+    val emojiOptions = listOf("🏃","🚶","🧘","🏋️","🚴","🏊","⛷️","🤸","🥊","🏸","⚽","🎾","🧗","🤽","🏇")
+
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+        // Info card
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = AccentTeal.copy(0.08f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, AccentTeal.copy(0.25f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(Icons.Default.Bolt, null, tint = AccentTeal, modifier = Modifier.size(18.dp))
+                Text(
+                    "Shortcut memungkinkan kamu log aktivitas favorit lebih cepat dari tab Quick Add.",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+        // Emoji picker
+        Text("Pilih Ikon", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(5),
+            modifier = Modifier.height(165.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            userScrollEnabled = false
+        ) {
+            items(emojiOptions) { emoji ->
+                val isSel = selectedEmoji == emoji
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSel) HealthGreen.copy(0.2f) else SlateLighter)
+                        .border(1.dp, if (isSel) HealthGreen else Color.Transparent, RoundedCornerShape(12.dp))
+                        .clickable { selectedEmoji = emoji },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(emoji, fontSize = 22.sp)
+                }
+            }
+        }
+
+        // Nama shortcut
+        ExerciseTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = "Nama Aktivitas",
+            placeholder = "Contoh: Yoga Pagi, Gym Sore..."
+        )
+
+        // Kalori per menit
+        ExerciseTextField(
+            value = calPerMin,
+            onValueChange = { calPerMin = it.filter(Char::isDigit) },
+            label = "Kalori per Menit (kcal)",
+            placeholder = "Contoh: 7",
+            keyboardType = KeyboardType.Number
+        )
+
+        // Tombol Aksi (Batal & Simpan)
+        val canSave = name.isNotBlank() && calPerMin.isNotBlank()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Tombol Batal
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SlateLighter)
+                    .border(1.dp, SlateLight, RoundedCornerShape(14.dp))
+                    .clickable(onClick = onCancel)
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Batal",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+
+            // Tombol Simpan
+            Box(
+                modifier = Modifier
+                    .weight(1.5f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        if (canSave)
+                            Brush.linearGradient(listOf(HealthGreen, HealthGreenDark))
+                        else
+                            Brush.linearGradient(listOf(SlateLight, SlateLight))
+                    )
+                    .clickable(enabled = canSave) {
+                        onSave(
+                            ActivityTemplate(
+                                emoji = selectedEmoji,
+                                name = name.trim(),
+                                caloriesPerMin = calPerMin.toIntOrNull() ?: 5
+                            )
+                        )
                     }
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Bolt, null, tint = if (canSave) DeepNavy else TextMuted)
+                    Text(
+                        "Simpan Shortcut",
+                        color = if (canSave) DeepNavy else TextMuted,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
                 }
             }
         }
@@ -794,15 +815,196 @@ fun ExerciseScreen(padding: PaddingValues) {
 }
 
 @Composable
-private fun DbPreviewRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+private fun ExerciseHeader() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brush.verticalGradient(listOf(HeaderStart, DeepNavy)))
+            .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
-        Text(label, color = TextSecondary, fontSize = 13.sp)
-        Text(value, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Exercise", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text("Pantau aktivitas fisikmu hari ini", color = TextSecondary, fontSize = 13.sp)
+            }
+
+            val isDark = LocalDarkTheme.current
+            val toggleTheme = LocalThemeToggle.current
+
+            IconButton(
+                onClick = toggleTheme,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(GlassWhite)
+            ) {
+                Icon(
+                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Ubah Tema",
+                    tint = HealthGreen
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun TodaySummaryCard(exerciseHistory: List<Exercise>) {
+    val todayLogs = exerciseHistory.filter { it.date == "Hari ini" }
+    val totalMinutes = todayLogs.sumOf { it.durationMinutes }
+    val totalCalories = todayLogs.sumOf { it.caloriesBurned }
+    val totalSessions = todayLogs.size
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Slate)
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(HealthGreen)
+                )
+                Text(
+                    "Aktivitas Hari Ini",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ExerciseStat("⏱️", "$totalMinutes", "menit", "Durasi", HealthGreen)
+                Box(Modifier.width(1.dp).height(50.dp).background(SlateLight))
+                ExerciseStat("🔥", "$totalCalories", "kcal", "Kalori", AccentTeal)
+                Box(Modifier.width(1.dp).height(50.dp).background(SlateLight))
+                ExerciseStat("💪", "$totalSessions", "sesi", "Sesi", AccentSage)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExerciseHistoryItem(ex: Exercise) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Slate)
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(HealthGreen.copy(0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(ex.emoji, fontSize = 20.sp)
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(ex.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(
+                    "${ex.durationMinutes} menit · ${ex.caloriesBurned} kcal",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = SlateLight
+                ) {
+                    Text(
+                        ex.date,
+                        color = TextMuted,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyHistoryState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 40.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("🏃", fontSize = 48.sp)
+            Text(
+                "Belum ada riwayat olahraga",
+                color = TextSecondary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                "Tekan tombol + untuk mulai catat aktivitasmu",
+                color = TextMuted,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExerciseTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier.fillMaxWidth()
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text(placeholder, color = TextMuted) },
+        modifier = modifier,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = HealthGreen,
+            unfocusedBorderColor = SlateLight,
+            focusedLabelColor = HealthGreen,
+            unfocusedLabelColor = TextSecondary,
+            cursorColor = HealthGreen,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            unfocusedContainerColor = SlateLighter,
+            focusedContainerColor = SlateLighter
+        )
+    )
 }
 
 @Composable
