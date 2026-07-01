@@ -46,7 +46,9 @@ private class ExerciseViewHolder(val composeView: ComposeView) : RecyclerView.Vi
 
 private class ExerciseAdapter(
     private var items: List<Exercise>,
-    private var isDarkTheme: Boolean
+    private var isDarkTheme: Boolean,
+    private val onEdit: (Exercise) -> Unit,
+    private val onDelete: (Exercise) -> Unit
 ) : RecyclerView.Adapter<ExerciseViewHolder>() {
 
     fun updateTheme(darkTheme: Boolean) {
@@ -80,7 +82,7 @@ private class ExerciseAdapter(
                 LocalDarkTheme provides isDarkTheme
             ) {
                 Box(modifier = Modifier.padding(vertical = 4.dp)) {
-                    ExerciseHistoryItem(item)
+                    ExerciseHistoryItem(item, onEdit, onDelete)
                 }
             }
         }
@@ -120,6 +122,8 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
     // ── Bottom-sheet control ──────────────────────────────────────────────────
     var showAddSheet by remember { mutableStateOf(false) }
+    var editingExercise by remember { mutableStateOf<Exercise?>(null) }
+    var deletingExercise by remember { mutableStateOf<Exercise?>(null) }
 
     // ── Render Sheet ──────────────────────────────────────────────────────────
     if (showAddSheet) {
@@ -131,6 +135,34 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 val id = repository.insertExercise(exercise)
                 exerciseHistory.add(0, exercise.copy(id = id.toInt()))
                 showAddSheet = false
+            }
+        )
+    }
+
+    // ── Render Dialogs ────────────────────────────────────────────────────────
+    editingExercise?.let { ex ->
+        EditExerciseDialog(
+            exercise = ex,
+            onDismiss = { editingExercise = null },
+            onConfirm = { updated ->
+                repository.updateExercise(updated)
+                val idx = exerciseHistory.indexOfFirst { it.id == updated.id }
+                if (idx != -1) {
+                    exerciseHistory[idx] = updated
+                }
+                editingExercise = null
+            }
+        )
+    }
+
+    deletingExercise?.let { ex ->
+        DeleteConfirmDialog(
+            exercise = ex,
+            onDismiss = { deletingExercise = null },
+            onConfirm = {
+                repository.deleteExercise(ex.id)
+                exerciseHistory.remove(ex)
+                deletingExercise = null
             }
         )
     }
@@ -207,7 +239,12 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
-                        adapter = ExerciseAdapter(exerciseHistory.toList(), isDarkTheme)
+                        adapter = ExerciseAdapter(
+                            items = exerciseHistory.toList(),
+                            isDarkTheme = isDarkTheme,
+                            onEdit = { editingExercise = it },
+                            onDelete = { deletingExercise = it }
+                        )
 
                         var currentScroll = 0
                         addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -985,7 +1022,11 @@ private fun TodaySummaryCard(exerciseHistory: List<Exercise>) {
 }
 
 @Composable
-private fun ExerciseHistoryItem(ex: Exercise) {
+private fun ExerciseHistoryItem(
+    ex: Exercise,
+    onEdit: (Exercise) -> Unit,
+    onDelete: (Exercise) -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1015,7 +1056,11 @@ private fun ExerciseHistoryItem(ex: Exercise) {
                     fontSize = 12.sp
                 )
             }
-            Column(horizontalAlignment = Alignment.End) {
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = SlateLight
@@ -1026,6 +1071,42 @@ private fun ExerciseHistoryItem(ex: Exercise) {
                         fontSize = 11.sp,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
+                }
+
+                var showMenu by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Opsi",
+                            tint = TextMuted,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEdit(ex)
+                            },
+                            leadingIcon = { Icon(Icons.Default.Edit, null, tint = AccentTeal) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Hapus", color = Color.Red) },
+                            onClick = {
+                                showMenu = false
+                                onDelete(ex)
+                            },
+                            leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                        )
+                    }
                 }
             }
         }
@@ -1101,4 +1182,163 @@ private fun ExerciseStat(emoji: String, value: String, unit: String, label: Stri
         Text(unit, color = color.copy(0.7f), fontSize = 10.sp)
         Text(label, color = TextMuted, fontSize = 9.sp)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditExerciseDialog(
+    exercise: Exercise,
+    onDismiss: () -> Unit,
+    onConfirm: (Exercise) -> Unit
+) {
+    var name by remember { mutableStateOf(exercise.name) }
+    var emoji by remember { mutableStateOf(exercise.emoji) }
+    var durationText by remember { mutableStateOf(exercise.durationMinutes.toString()) }
+    var caloriesText by remember { mutableStateOf(exercise.caloriesBurned.toString()) }
+    
+    val emojiOptions = listOf("🏃","🚶","🧘","🏋️","🚴","🏊","⛷️","🤸","🥊","🏸","⚽","🎾","🧗","🤽","🏇")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Edit Aktivitas", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Pilih Ikon
+                Text("Pilih Ikon", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    modifier = Modifier.height(115.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    userScrollEnabled = true
+                ) {
+                    items(emojiOptions) { em ->
+                        val isSel = emoji == em
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSel) HealthGreen.copy(0.2f) else SlateLighter)
+                                .border(1.dp, if (isSel) HealthGreen else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { emoji = em },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(em, fontSize = 18.sp)
+                        }
+                    }
+                }
+
+                // Nama Aktivitas
+                Text("Nama Aktivitas", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedBorderColor = HealthGreen,
+                        unfocusedBorderColor = SlateLight,
+                        focusedContainerColor = Slate,
+                        unfocusedContainerColor = Slate
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Durasi
+                Text("Durasi (Menit)", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                OutlinedTextField(
+                    value = durationText,
+                    onValueChange = { durationText = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedBorderColor = HealthGreen,
+                        unfocusedBorderColor = SlateLight,
+                        focusedContainerColor = Slate,
+                        unfocusedContainerColor = Slate
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Kalori
+                Text("Estimasi Kalori Terbakar (kcal)", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                OutlinedTextField(
+                    value = caloriesText,
+                    onValueChange = { caloriesText = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedBorderColor = HealthGreen,
+                        unfocusedBorderColor = SlateLight,
+                        focusedContainerColor = Slate,
+                        unfocusedContainerColor = Slate
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val duration = durationText.toIntOrNull() ?: exercise.durationMinutes
+                    val calories = caloriesText.toIntOrNull() ?: exercise.caloriesBurned
+                    if (name.isNotBlank()) {
+                        onConfirm(
+                            exercise.copy(
+                                name = name.trim(),
+                                emoji = emoji,
+                                durationMinutes = duration,
+                                caloriesBurned = calories
+                            )
+                        )
+                    }
+                }
+            ) {
+                Text("Simpan", color = HealthGreen, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal", color = TextSecondary)
+            }
+        },
+        containerColor = Slate,
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+@Composable
+private fun DeleteConfirmDialog(
+    exercise: Exercise,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Hapus Aktivitas", color = TextPrimary, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text("Apakah kamu yakin ingin menghapus catatan aktivitas \"${exercise.name}\"? Tindakan ini tidak bisa dibatalkan.", color = TextSecondary)
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Hapus", color = Color.Red, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal", color = TextSecondary)
+            }
+        },
+        containerColor = Slate,
+        shape = RoundedCornerShape(20.dp)
+    )
 }

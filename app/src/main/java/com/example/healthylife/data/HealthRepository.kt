@@ -94,8 +94,33 @@ class HealthRepository(context: Context) {
         return db.insert(DatabaseHelper.TABLE_EXERCISES, null, values)
     }
 
-    // ── FOOD OPERATIONS ───────────────────────────────────────────────────────
+    fun updateExercise(exercise: Exercise): Int {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.KEY_EXERCISE_NAME, exercise.name)
+            put(DatabaseHelper.KEY_EXERCISE_EMOJI, exercise.emoji)
+            put(DatabaseHelper.KEY_EXERCISE_DURATION_MINUTES, exercise.durationMinutes)
+            put(DatabaseHelper.KEY_EXERCISE_CALORIES_BURNED, exercise.caloriesBurned)
+            put(DatabaseHelper.KEY_EXERCISE_DATE, exercise.date)
+        }
+        return db.update(
+            DatabaseHelper.TABLE_EXERCISES,
+            values,
+            "${DatabaseHelper.KEY_EXERCISE_ID} = ?",
+            arrayOf(exercise.id.toString())
+        )
+    }
 
+    fun deleteExercise(id: Int): Int {
+        val db = dbHelper.writableDatabase
+        return db.delete(
+            DatabaseHelper.TABLE_EXERCISES,
+            "${DatabaseHelper.KEY_EXERCISE_ID} = ?",
+            arrayOf(id.toString())
+        )
+    }
+
+    // ── FOOD OPERATIONS ───────────────────────────────────────────────────────
     fun getAllFoods(): List<Food> {
         val list = mutableListOf<Food>()
         val db = dbHelper.readableDatabase
