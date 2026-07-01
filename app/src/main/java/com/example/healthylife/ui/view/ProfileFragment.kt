@@ -43,9 +43,6 @@ class ProfileFragment : Fragment() {
         binding.btnSettings.setOnClickListener {
             (activity as? Navigator)?.openSettings()
         }
-        binding.btnOpenSettings.setOnClickListener {
-            (activity as? Navigator)?.openSettings()
-        }
 
         // Konfigurasi ikon & warna kartu statistik
         setupStat(binding.statAge, "🎂", "Umur", "tahun", R.color.accent_sage)
