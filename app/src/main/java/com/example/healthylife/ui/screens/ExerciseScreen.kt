@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -44,12 +45,21 @@ private class ExerciseViewHolder(val composeView: ComposeView) : RecyclerView.Vi
 
 private class ExerciseAdapter(
     private var items: List<Exercise>,
-    private val isDarkTheme: Boolean
+    private var isDarkTheme: Boolean
 ) : RecyclerView.Adapter<ExerciseViewHolder>() {
 
+    fun updateTheme(darkTheme: Boolean) {
+        if (isDarkTheme != darkTheme) {
+            isDarkTheme = darkTheme
+            notifyDataSetChanged()
+        }
+    }
+
     fun updateItems(newItems: List<Exercise>) {
-        items = newItems
-        notifyDataSetChanged()
+        if (this.items != newItems) {
+            items = newItems
+            notifyDataSetChanged()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
@@ -79,8 +89,8 @@ private class ExerciseAdapter(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ExerciseScreen — UI Utama
-// Berisi: Header · Summary Hari Ini · Riwayat · FAB Tambah
+// ExerciseScreen
+// Header · Summary Hari Ini · Riwayat · FAB Tambah
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,51 +136,44 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
     // ── Main UI ───────────────────────────────────────────────────────────────
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-        ) {
-            // Header
-            ExerciseHeader()
-
-            // Summary hari ini
-            Spacer(Modifier.height(20.dp))
-            TodaySummaryCard(exerciseHistory)
-
-            // Label Riwayat
-            Spacer(Modifier.height(28.dp))
-            Row(
+        if (exerciseHistory.isEmpty()) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(padding)
             ) {
-                Text(
-                    "Riwayat Olahraga",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = AccentTeal.copy(0.12f)
+                ExerciseHeader()
+                Spacer(Modifier.height(20.dp))
+                TodaySummaryCard(exerciseHistory)
+                Spacer(Modifier.height(28.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${exerciseHistory.size} sesi",
-                        color = AccentTeal,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        "Riwayat Olahraga",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
                     )
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = AccentTeal.copy(0.12f)
+                    ) {
+                        Text(
+                            "0 sesi",
+                            color = AccentTeal,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
                 }
-            }
-            Spacer(Modifier.height(12.dp))
-
-            // Daftar riwayat menggunakan native RecyclerView
-            if (exerciseHistory.isEmpty()) {
+                Spacer(Modifier.height(12.dp))
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -179,27 +182,108 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 ) {
                     EmptyHistoryState()
                 }
-            } else {
-                val isDarkTheme = LocalDarkTheme.current
-                val density = androidx.compose.ui.platform.LocalDensity.current
-                val bottomPaddingPx = with(density) { 88.dp.roundToPx() }
-                
-                AndroidView(
-                    factory = { context ->
-                        RecyclerView(context).apply {
-                            layoutManager = LinearLayoutManager(context)
-                            clipToPadding = false
-                            setPadding(0, 0, 0, bottomPaddingPx)
-                            adapter = ExerciseAdapter(exerciseHistory, isDarkTheme)
-                        }
-                    },
-                    update = { recyclerView ->
-                        (recyclerView.adapter as? ExerciseAdapter)?.updateItems(exerciseHistory)
-                    },
+            }
+        } else {
+            val isDarkTheme = LocalDarkTheme.current
+            val density = androidx.compose.ui.platform.LocalDensity.current
+
+            var headerAndSummaryHeightPx by remember { mutableIntStateOf(0) }
+            var titleHeightPx by remember { mutableIntStateOf(0) }
+            var scrollOffset by remember { mutableIntStateOf(0) }
+
+            val collapseOffset = with(density) {
+                scrollOffset.coerceIn(0, headerAndSummaryHeightPx).toDp()
+            }
+            val bottomPaddingPx = with(density) { (padding.calculateBottomPadding() + 88.dp).roundToPx() }
+            val topSystemPaddingPx = with(density) { padding.calculateTopPadding().roundToPx() }
+
+            AndroidView(
+                factory = { context ->
+                    RecyclerView(context).apply {
+                        layoutManager = LinearLayoutManager(context)
+                        clipToPadding = false
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        adapter = ExerciseAdapter(exerciseHistory.toList(), isDarkTheme)
+
+                        var currentScroll = 0
+                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                                currentScroll += dy
+                                scrollOffset = currentScroll
+                            }
+                        })
+                    }
+                },
+                update = { recyclerView ->
+                    val totalTopPaddingPx = headerAndSummaryHeightPx + titleHeightPx + topSystemPaddingPx
+                    if (recyclerView.paddingTop != totalTopPaddingPx || recyclerView.paddingBottom != bottomPaddingPx) {
+                        recyclerView.setPadding(0, totalTopPaddingPx, 0, bottomPaddingPx)
+                    }
+                    val adapter = recyclerView.adapter as? ExerciseAdapter
+                    adapter?.updateTheme(isDarkTheme)
+                    adapter?.updateItems(exerciseHistory.toList())
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = padding.calculateTopPadding())
+                    .offset(y = -collapseOffset)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                Column(
                     modifier = Modifier
-                        .weight(1f)
                         .fillMaxWidth()
-                )
+                        .onGloballyPositioned { coords ->
+                            headerAndSummaryHeightPx = coords.size.height
+                        }
+                ) {
+                    ExerciseHeader()
+                    Spacer(Modifier.height(20.dp))
+                    TodaySummaryCard(exerciseHistory)
+                    Spacer(Modifier.height(28.dp))
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coords ->
+                            titleHeightPx = coords.size.height
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Riwayat Olahraga",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = AccentTeal.copy(0.12f)
+                        ) {
+                            Text(
+                                "${exerciseHistory.size} sesi",
+                                color = AccentTeal,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
             }
         }
 
