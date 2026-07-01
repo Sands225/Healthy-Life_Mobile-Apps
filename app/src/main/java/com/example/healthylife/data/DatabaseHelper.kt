@@ -4,12 +4,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.healthylife.util.DateUtils
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "healthylife.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 3
 
         // Table: users
         const val TABLE_USERS = "users"
@@ -133,42 +134,42 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 put(KEY_EXERCISE_EMOJI, "🏃")
                 put(KEY_EXERCISE_DURATION_MINUTES, 35)
                 put(KEY_EXERCISE_CALORIES_BURNED, 320)
-                put(KEY_EXERCISE_DATE, "Hari ini")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(0))
             },
             ContentValues().apply {
                 put(KEY_EXERCISE_NAME, "Walking")
                 put(KEY_EXERCISE_EMOJI, "🚶")
                 put(KEY_EXERCISE_DURATION_MINUTES, 20)
                 put(KEY_EXERCISE_CALORIES_BURNED, 90)
-                put(KEY_EXERCISE_DATE, "Hari ini")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(0))
             },
             ContentValues().apply {
                 put(KEY_EXERCISE_NAME, "Gym")
                 put(KEY_EXERCISE_EMOJI, "🏋️")
                 put(KEY_EXERCISE_DURATION_MINUTES, 50)
                 put(KEY_EXERCISE_CALORIES_BURNED, 450)
-                put(KEY_EXERCISE_DATE, "Kemarin")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(1))
             },
             ContentValues().apply {
                 put(KEY_EXERCISE_NAME, "Yoga")
                 put(KEY_EXERCISE_EMOJI, "🧘")
                 put(KEY_EXERCISE_DURATION_MINUTES, 30)
                 put(KEY_EXERCISE_CALORIES_BURNED, 120)
-                put(KEY_EXERCISE_DATE, "Kemarin")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(1))
             },
             ContentValues().apply {
                 put(KEY_EXERCISE_NAME, "Running")
                 put(KEY_EXERCISE_EMOJI, "🏃")
                 put(KEY_EXERCISE_DURATION_MINUTES, 40)
                 put(KEY_EXERCISE_CALORIES_BURNED, 360)
-                put(KEY_EXERCISE_DATE, "2 hari lalu")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(2))
             },
             ContentValues().apply {
                 put(KEY_EXERCISE_NAME, "Cycling")
                 put(KEY_EXERCISE_EMOJI, "🚴")
                 put(KEY_EXERCISE_DURATION_MINUTES, 45)
                 put(KEY_EXERCISE_CALORIES_BURNED, 380)
-                put(KEY_EXERCISE_DATE, "3 hari lalu")
+                put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(3))
             }
         )
         for (ex in initialExercises) {
@@ -257,49 +258,49 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         // 4. Seed sleep records
         val initialSleep = listOf(
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "Hari ini")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(0))
                 put(KEY_SLEEP_BED_TIME, "22:00")
                 put(KEY_SLEEP_WAKE_TIME, "06:00")
                 put(KEY_SLEEP_DURATION_HOURS, 8.0f)
                 put(KEY_SLEEP_QUALITY, "Excellent")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "Kemarin")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(1))
                 put(KEY_SLEEP_BED_TIME, "23:30")
                 put(KEY_SLEEP_WAKE_TIME, "06:30")
                 put(KEY_SLEEP_DURATION_HOURS, 7.0f)
                 put(KEY_SLEEP_QUALITY, "Normal")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "2 hari lalu")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(2))
                 put(KEY_SLEEP_BED_TIME, "22:45")
                 put(KEY_SLEEP_WAKE_TIME, "05:45")
                 put(KEY_SLEEP_DURATION_HOURS, 7.0f)
                 put(KEY_SLEEP_QUALITY, "Normal")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "3 hari lalu")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(3))
                 put(KEY_SLEEP_BED_TIME, "21:30")
                 put(KEY_SLEEP_WAKE_TIME, "06:00")
                 put(KEY_SLEEP_DURATION_HOURS, 8.5f)
                 put(KEY_SLEEP_QUALITY, "Excellent")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "4 hari lalu")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(4))
                 put(KEY_SLEEP_BED_TIME, "00:00")
                 put(KEY_SLEEP_WAKE_TIME, "06:00")
                 put(KEY_SLEEP_DURATION_HOURS, 6.0f)
                 put(KEY_SLEEP_QUALITY, "Poor")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "5 hari lalu")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(5))
                 put(KEY_SLEEP_BED_TIME, "22:15")
                 put(KEY_SLEEP_WAKE_TIME, "06:15")
                 put(KEY_SLEEP_DURATION_HOURS, 8.0f)
                 put(KEY_SLEEP_QUALITY, "Excellent")
             },
             ContentValues().apply {
-                put(KEY_SLEEP_DATE, "6 hari lalu")
+                put(KEY_SLEEP_DATE, DateUtils.getRelativeDateString(6))
                 put(KEY_SLEEP_BED_TIME, "23:00")
                 put(KEY_SLEEP_WAKE_TIME, "06:00")
                 put(KEY_SLEEP_DURATION_HOURS, 7.0f)

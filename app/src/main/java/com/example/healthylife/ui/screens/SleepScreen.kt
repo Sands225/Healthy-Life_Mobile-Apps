@@ -24,6 +24,7 @@ import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.SleepRecord
 import com.example.healthylife.ui.theme.*
+import com.example.healthylife.util.DateUtils
 
 @Composable
 fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
@@ -436,7 +437,7 @@ fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(rec.date, color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                        Text(DateUtils.toRelativeString(rec.date), color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
                         Text("${rec.bedTime} → ${rec.wakeTime}", color = TextSecondary, fontSize = 12.sp)
                     }
                     Column(horizontalAlignment = Alignment.End) {
@@ -460,7 +461,7 @@ fun SleepScreen(padding: PaddingValues, repository: HealthRepository) {
                         val duration = calculateSleepDuration(bedTime, wakeTime)
                         val newRecord = SleepRecord(
                             id = 0,
-                            date = "Hari ini",
+                            date = DateUtils.getTodayDateString(),
                             bedTime = bedTime,
                             wakeTime = wakeTime,
                             durationHours = duration,

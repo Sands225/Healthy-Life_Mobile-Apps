@@ -4,6 +4,7 @@ import com.example.healthylife.model.Exercise
 import com.example.healthylife.model.Food
 import com.example.healthylife.model.SleepRecord
 import com.example.healthylife.model.User
+import com.example.healthylife.util.DateUtils
 
 object DummyData {
 
@@ -20,15 +21,15 @@ object DummyData {
     )
 
     val exercises = listOf(
-        Exercise(1, "Running",  "🏃", 35, 320, "Hari ini"),
-        Exercise(2, "Walking",  "🚶", 20, 90,  "Hari ini"),
-        Exercise(3, "Gym",      "🏋️", 50, 450, "Kemarin"),
-        Exercise(4, "Yoga",     "🧘", 30, 120, "Kemarin"),
-        Exercise(5, "Running",  "🏃", 40, 360, "2 hari lalu"),
-        Exercise(6, "Cycling",  "🚴", 45, 380, "3 hari lalu")
+        Exercise(1, "Running",  "🏃", 35, 320, DateUtils.getTodayDateString()),
+        Exercise(2, "Walking",  "🚶", 20, 90,  DateUtils.getTodayDateString()),
+        Exercise(3, "Gym",      "🏋️", 50, 450, DateUtils.getRelativeDateString(1)),
+        Exercise(4, "Yoga",     "🧘", 30, 120, DateUtils.getRelativeDateString(1)),
+        Exercise(5, "Running",  "🏃", 40, 360, DateUtils.getRelativeDateString(2)),
+        Exercise(6, "Cycling",  "🚴", 45, 380, DateUtils.getRelativeDateString(3))
     )
 
-    val todayExercises = exercises.filter { it.date == "Hari ini" }
+    val todayExercises = exercises.filter { it.date == DateUtils.getTodayDateString() }
     val todayExerciseMinutes = todayExercises.sumOf { it.durationMinutes }
     val todayCaloriesBurned  = todayExercises.sumOf { it.caloriesBurned }
 
@@ -50,13 +51,13 @@ object DummyData {
     val totalFatToday      = todayFoods.sumOf { it.fat.toDouble() }.toFloat()
 
     val sleepRecords = listOf(
-        SleepRecord(1, "Hari ini",   "22:00", "06:00", 8.0f,  "Excellent"),
-        SleepRecord(2, "Kemarin",    "23:30", "06:30", 7.0f,  "Normal"),
-        SleepRecord(3, "2 hari lalu","22:45", "05:45", 7.0f,  "Normal"),
-        SleepRecord(4, "3 hari lalu","21:30", "06:00", 8.5f,  "Excellent"),
-        SleepRecord(5, "4 hari lalu","00:00", "06:00", 6.0f,  "Poor"),
-        SleepRecord(6, "5 hari lalu","22:15", "06:15", 8.0f,  "Excellent"),
-        SleepRecord(7, "6 hari lalu","23:00", "06:00", 7.0f,  "Normal")
+        SleepRecord(1, DateUtils.getTodayDateString(),   "22:00", "06:00", 8.0f,  "Excellent"),
+        SleepRecord(2, DateUtils.getRelativeDateString(1),    "23:30", "06:30", 7.0f,  "Normal"),
+        SleepRecord(3, DateUtils.getRelativeDateString(2),"22:45", "05:45", 7.0f,  "Normal"),
+        SleepRecord(4, DateUtils.getRelativeDateString(3),"21:30", "06:00", 8.5f,  "Excellent"),
+        SleepRecord(5, DateUtils.getRelativeDateString(4),"00:00", "06:00", 6.0f,  "Poor"),
+        SleepRecord(6, DateUtils.getRelativeDateString(5),"22:15", "06:15", 8.0f,  "Excellent"),
+        SleepRecord(7, DateUtils.getRelativeDateString(6),"23:00", "06:00", 7.0f,  "Normal")
     )
 
     val lastNightSleep = sleepRecords.first()

@@ -37,6 +37,7 @@ import com.example.healthylife.model.Food
 import com.example.healthylife.model.SleepRecord
 import com.example.healthylife.model.User
 import com.example.healthylife.ui.theme.*
+import com.example.healthylife.util.DateUtils
 
 @Composable
 fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
@@ -59,7 +60,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
     }
 
     val sleep = sleepRecords.firstOrNull() ?: DummyData.lastNightSleep
-    val todayExercises = exercises.filter { it.date == "Hari ini" }
+    val todayExercises = exercises.filter { it.date == DateUtils.getTodayDateString() }
     val todayFoods = foods.take(5)
 
     val totalCalories = todayFoods.sumOf { it.calories }
@@ -173,7 +174,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                             val hours = sleepHoursInput.toFloatOrNull() ?: 8f
                             val newRecord = SleepRecord(
                                 id = 0,
-                                date = "Hari ini",
+                                date = DateUtils.getTodayDateString(),
                                 bedTime = "22:00",
                                 wakeTime = "${if (22 + hours.toInt() >= 24) 22 + hours.toInt() - 24 else 22 + hours.toInt()}:00",
                                 durationHours = hours,
@@ -344,7 +345,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                                 emoji = "🏃",
                                 durationMinutes = mins,
                                 caloriesBurned = mins * 9,
-                                date = "Hari ini"
+                                date = DateUtils.getTodayDateString()
                             )
                             repository.insertExercise(newExerciseLog)
                             val dbExercises = repository.getAllExercises()

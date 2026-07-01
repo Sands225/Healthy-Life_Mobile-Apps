@@ -33,6 +33,7 @@ import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Exercise
 import com.example.healthylife.ui.theme.*
+import com.example.healthylife.util.DateUtils
 
 // Template aktivitas untuk shortcut / fast-add
 private data class ActivityTemplate(
@@ -607,7 +608,7 @@ private fun QuickAddTab(
                                     emoji = t.emoji,
                                     durationMinutes = duration.toInt(),
                                     caloriesBurned = cals,
-                                    date = "Hari ini"
+                                    date = DateUtils.getTodayDateString()
                                 )
                             )
                         }
@@ -731,7 +732,7 @@ private fun ManualAddTab(onLog: (Exercise) -> Unit) {
                             emoji = selectedEmoji,
                             durationMinutes = durationText.toIntOrNull() ?: 30,
                             caloriesBurned = caloriesText.toIntOrNull() ?: 0,
-                            date = "Hari ini"
+                            date = DateUtils.getTodayDateString()
                         )
                     )
                 }
@@ -938,7 +939,7 @@ private fun ExerciseHeader() {
 
 @Composable
 private fun TodaySummaryCard(exerciseHistory: List<Exercise>) {
-    val todayLogs = exerciseHistory.filter { it.date == "Hari ini" }
+    val todayLogs = exerciseHistory.filter { it.date == DateUtils.getTodayDateString() }
     val totalMinutes = todayLogs.sumOf { it.durationMinutes }
     val totalCalories = todayLogs.sumOf { it.caloriesBurned }
     val totalSessions = todayLogs.size
@@ -1020,7 +1021,7 @@ private fun ExerciseHistoryItem(ex: Exercise) {
                     color = SlateLight
                 ) {
                     Text(
-                        ex.date,
+                        DateUtils.toRelativeString(ex.date),
                         color = TextMuted,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

@@ -62,7 +62,7 @@ class HealthRepository(context: Context) {
     fun getAllExercises(): List<Exercise> {
         val list = mutableListOf<Exercise>()
         val db = dbHelper.readableDatabase
-        val selectQuery = "SELECT * FROM ${DatabaseHelper.TABLE_EXERCISES} ORDER BY ${DatabaseHelper.KEY_EXERCISE_ID} DESC"
+        val selectQuery = "SELECT * FROM ${DatabaseHelper.TABLE_EXERCISES} ORDER BY ${DatabaseHelper.KEY_EXERCISE_DATE} DESC, ${DatabaseHelper.KEY_EXERCISE_ID} DESC"
         val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
@@ -140,7 +140,7 @@ class HealthRepository(context: Context) {
     fun getAllSleepRecords(): List<SleepRecord> {
         val list = mutableListOf<SleepRecord>()
         val db = dbHelper.readableDatabase
-        val selectQuery = "SELECT * FROM ${DatabaseHelper.TABLE_SLEEP_RECORDS} ORDER BY ${DatabaseHelper.KEY_SLEEP_ID} DESC"
+        val selectQuery = "SELECT * FROM ${DatabaseHelper.TABLE_SLEEP_RECORDS} ORDER BY ${DatabaseHelper.KEY_SLEEP_DATE} DESC, ${DatabaseHelper.KEY_SLEEP_ID} DESC"
         val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
