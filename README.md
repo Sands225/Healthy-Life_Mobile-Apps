@@ -214,47 +214,23 @@ Aplikasi memiliki beberapa komponen visual yang dibuat secara khusus.
 ---
 
 # 📸 Tampilan Aplikasi
-
-> Tambahkan screenshot aplikasi pada folder berikut:
-
-```
-docs/
-│
-├── home.png
-├── exercise.png
-├── nutrition.png
-├── sleep.png
-├── profile.png
-└── settings.png
-```
-
-Kemudian tampilkan menggunakan Markdown:
-
-```md
 ## Home
-
-![Home](docs/home.png)
+<img width="838" height="900" alt="Screenshot 2026-07-01 234113" src="https://github.com/user-attachments/assets/8e36d59c-f340-49d5-948e-fd80af793e6a" />
 
 ## Exercise
-
-![Exercise](docs/exercise.png)
+<img width="792" height="1126" alt="Screenshot 2026-07-01 234151" src="https://github.com/user-attachments/assets/c1d3b65d-2205-47bc-8664-154fb36e061e" />
 
 ## Nutrition
-
-![Nutrition](docs/nutrition.png)
+<img width="1048" height="738" alt="Screenshot 2026-07-01 234225" src="https://github.com/user-attachments/assets/fe36ca80-9033-4f2f-98f0-3d242a4608f8" />
 
 ## Sleep
-
-![Sleep](docs/sleep.png)
+<img width="680" height="718" alt="Screenshot 2026-07-01 234455" src="https://github.com/user-attachments/assets/2e4bc0bf-5f1c-49cd-bc63-e27da3773764" />
 
 ## Profile
-
-![Profile](docs/profile.png)
+<img width="328" height="724" alt="Screenshot 2026-07-01 234303" src="https://github.com/user-attachments/assets/4ec1567e-cf83-488e-a218-784ea5d83cd6" />
 
 ## Settings
-
-![Settings](docs/settings.png)
-```
+<img width="396" height="864" alt="Screenshot 2026-07-01 234331" src="https://github.com/user-attachments/assets/0a5a0c9b-1d58-4fde-a1f6-41dbfe1ab0cb" />
 
 ---
 
