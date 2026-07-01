@@ -192,7 +192,7 @@ fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
                             Text("Kalori Hari Ini", color = TextSecondary, fontSize = 13.sp)
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text("$totalCalToday", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 30.sp)
-                                Text(" / ${user.targetCalories} kcal", color = TextSecondary, fontSize = 13.sp)
+                                Text(" / ${user.targetCalories} cal", color = TextSecondary, fontSize = 13.sp)
                             }
                         }
                         Text(
@@ -238,7 +238,7 @@ fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
             )
             Spacer(Modifier.height(12.dp))
             AnalyticsSection(
-                unit = "kcal",
+                unit = "cal",
                 accent = HealthGreen,
                 data = foodList.map { it.date to it.calories.toFloat() }
             )
@@ -420,7 +420,7 @@ fun NutritionScreen(padding: PaddingValues, repository: HealthRepository) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(food.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         Text(
-                            "${food.calories} kcal  ·  K:${food.carbs.toInt()}g  P:${food.protein.toInt()}g  L:${food.fat.toInt()}g  S:${food.fiber.toInt()}g",
+                            "${food.calories} cal  ·  K:${food.carbs.toInt()}g  P:${food.protein.toInt()}g  L:${food.fat.toInt()}g  S:${food.fiber.toInt()}g",
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
@@ -570,7 +570,7 @@ private fun FoodFormSheet(
                 OutlinedTextField(
                     value = calories,
                     onValueChange = { calories = it.filter { c -> c.isDigit() } },
-                    label = { Text("Kalori (kcal)") },
+                    label = { Text("Kalori (cal)") },
                     placeholder = { Text("Contoh: 350", color = TextMuted) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,

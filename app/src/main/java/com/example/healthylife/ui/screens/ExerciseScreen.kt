@@ -6,8 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.*
@@ -21,18 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.view.ViewGroup
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.compose.ui.platform.ComposeView
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.model.Exercise
@@ -48,55 +40,6 @@ private data class ActivityTemplate(
     val name: String,
     val caloriesPerMin: Int
 )
-
-private class ExerciseViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
-
-private class ExerciseAdapter(
-    private var items: List<Exercise>,
-    private var isDarkTheme: Boolean,
-    private val onEdit: (Exercise) -> Unit,
-    private val onDelete: (Exercise) -> Unit
-) : RecyclerView.Adapter<ExerciseViewHolder>() {
-
-    fun updateTheme(darkTheme: Boolean) {
-        if (isDarkTheme != darkTheme) {
-            isDarkTheme = darkTheme
-            notifyDataSetChanged()
-        }
-    }
-
-    fun updateItems(newItems: List<Exercise>) {
-        if (this.items != newItems) {
-            items = newItems
-            notifyDataSetChanged()
-        }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
-        val composeView = ComposeView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        return ExerciseViewHolder(composeView)
-    }
-
-    override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
-        val item = items[position]
-        holder.composeView.setContent {
-            CompositionLocalProvider(
-                LocalDarkTheme provides isDarkTheme
-            ) {
-                Box(modifier = Modifier.padding(vertical = 4.dp)) {
-                    ExerciseHistoryItem(item, onEdit, onDelete)
-                }
-            }
-        }
-    }
-
-    override fun getItemCount(): Int = items.size
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ExerciseScreen
@@ -185,17 +128,21 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
 
     // ── Main UI ───────────────────────────────────────────────────────────────
     Box(modifier = Modifier.fillMaxSize()) {
-        if (filteredHistory.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                ExerciseHeader()
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding),
+            contentPadding = PaddingValues(bottom = 96.dp)
+        ) {
+            item { ExerciseHeader() }
+
+            item {
                 Spacer(Modifier.height(20.dp))
                 TodaySummaryCard(exerciseHistory)
+            }
+
+            item {
                 Spacer(Modifier.height(24.dp))
                 Text(
                     "Analitik",
@@ -206,10 +153,13 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                 )
                 Spacer(Modifier.height(12.dp))
                 AnalyticsSection(
-                    unit = "menit",
+                    unit = "cal",
                     accent = AccentTeal,
-                    data = exerciseHistory.map { it.date to it.durationMinutes.toFloat() }
+                    data = exerciseHistory.map { it.date to it.caloriesBurned.toFloat() }
                 )
+            }
+
+            item {
                 Spacer(Modifier.height(24.dp))
                 TimeFilterRow(selected = timeFilter, onSelected = { timeFilter = it })
                 Spacer(Modifier.height(20.dp))
@@ -231,7 +181,7 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                         color = AccentTeal.copy(0.12f)
                     ) {
                         Text(
-                            "0 sesi",
+                            "${filteredHistory.size} sesi",
                             color = AccentTeal,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
@@ -240,137 +190,26 @@ fun ExerciseScreen(padding: PaddingValues, repository: HealthRepository) {
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    EmptyHistoryState()
-                }
             }
-        } else {
-            val isDarkTheme = LocalDarkTheme.current
-            val density = androidx.compose.ui.platform.LocalDensity.current
 
-            var headerAndSummaryHeightPx by remember { mutableIntStateOf(0) }
-            var titleHeightPx by remember { mutableIntStateOf(0) }
-            var scrollOffset by remember { mutableIntStateOf(0) }
-
-            val collapseOffset = with(density) {
-                scrollOffset.coerceIn(0, headerAndSummaryHeightPx).toDp()
-            }
-            val bottomPaddingPx = with(density) { (padding.calculateBottomPadding() + 88.dp).roundToPx() }
-            val topSystemPaddingPx = with(density) { padding.calculateTopPadding().roundToPx() }
-
-            AndroidView(
-                factory = { context ->
-                    RecyclerView(context).apply {
-                        layoutManager = LinearLayoutManager(context)
-                        clipToPadding = false
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        adapter = ExerciseAdapter(
-                            items = filteredHistory,
-                            isDarkTheme = isDarkTheme,
-                            onEdit = { editingExercise = it },
-                            onDelete = { deletingExercise = it }
-                        )
-
-                        var currentScroll = 0
-                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                currentScroll += dy
-                                scrollOffset = currentScroll
-                            }
-                        })
-                    }
-                },
-                update = { recyclerView ->
-                    val totalTopPaddingPx = headerAndSummaryHeightPx + titleHeightPx + topSystemPaddingPx
-                    if (recyclerView.paddingTop != totalTopPaddingPx || recyclerView.paddingBottom != bottomPaddingPx) {
-                        recyclerView.setPadding(0, totalTopPaddingPx, 0, bottomPaddingPx)
-                    }
-                    val adapter = recyclerView.adapter as? ExerciseAdapter
-                    adapter?.updateTheme(isDarkTheme)
-                    adapter?.updateItems(filteredHistory)
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = padding.calculateTopPadding())
-                    .offset(y = -collapseOffset)
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onGloballyPositioned { coords ->
-                            headerAndSummaryHeightPx = coords.size.height
-                        }
-                ) {
-                    ExerciseHeader()
-                    Spacer(Modifier.height(20.dp))
-                    TodaySummaryCard(exerciseHistory)
-                    Spacer(Modifier.height(24.dp))
-                    Text(
-                        "Analitik",
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    AnalyticsSection(
-                        unit = "menit",
-                        accent = AccentTeal,
-                        data = exerciseHistory.map { it.date to it.durationMinutes.toFloat() }
-                    )
-                    Spacer(Modifier.height(28.dp))
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .onGloballyPositioned { coords ->
-                            titleHeightPx = coords.size.height
-                        }
-                ) {
-                    TimeFilterRow(selected = timeFilter, onSelected = { timeFilter = it })
-                    Spacer(Modifier.height(20.dp))
-                    Row(
+            if (filteredHistory.isEmpty()) {
+                item {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "Riwayat Olahraga",
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = AccentTeal.copy(0.12f)
-                        ) {
-                            Text(
-                                "${filteredHistory.size} sesi",
-                                color = AccentTeal,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
+                        EmptyHistoryState()
                     }
-                    Spacer(Modifier.height(12.dp))
+                }
+            } else {
+                items(filteredHistory, key = { it.id }) { ex ->
+                    ExerciseHistoryItem(
+                        ex = ex,
+                        onEdit = { editingExercise = it },
+                        onDelete = { deletingExercise = it }
+                    )
                 }
             }
         }
@@ -705,7 +544,7 @@ private fun QuickAddTab(
                         Text("🔥", fontSize = 16.sp)
                         Text("Estimasi kalori terbakar:", color = TextSecondary, fontSize = 12.sp)
                         Spacer(Modifier.weight(1f))
-                        Text("~$cals kcal", color = AccentTeal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("~$cals cal", color = AccentTeal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             }
@@ -822,7 +661,7 @@ private fun ManualAddTab(onLog: (Exercise) -> Unit) {
             ExerciseTextField(
                 value = caloriesText,
                 onValueChange = { caloriesText = it.filter(Char::isDigit) },
-                label = "Kalori (kcal)",
+                label = "Kalori (cal)",
                 placeholder = "150",
                 keyboardType = KeyboardType.Number,
                 modifier = Modifier.weight(1f)
@@ -951,7 +790,7 @@ private fun TodaySummaryCard(exerciseHistory: List<Exercise>) {
             ) {
                 ExerciseStat("⏱️", "$totalMinutes", "menit", "Durasi", HealthGreen)
                 Box(Modifier.width(1.dp).height(50.dp).background(SlateLight))
-                ExerciseStat("🔥", "$totalCalories", "kcal", "Kalori", AccentTeal)
+                ExerciseStat("🔥", "$totalCalories", "cal", "Kalori", AccentTeal)
                 Box(Modifier.width(1.dp).height(50.dp).background(SlateLight))
                 ExerciseStat("💪", "$totalSessions", "sesi", "Sesi", AccentSage)
             }
@@ -989,7 +828,7 @@ private fun ExerciseHistoryItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(ex.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 Text(
-                    "${ex.durationMinutes} menit · ${ex.caloriesBurned} kcal",
+                    "${ex.durationMinutes} menit · ${ex.caloriesBurned} cal",
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -1205,7 +1044,7 @@ private fun EditExerciseDialog(
                 )
 
                 // Kalori
-                Text("Estimasi Kalori Terbakar (kcal)", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                Text("Estimasi Kalori Terbakar (cal)", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 OutlinedTextField(
                     value = caloriesText,
                     onValueChange = { caloriesText = it },

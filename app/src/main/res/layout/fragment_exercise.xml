@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="90dp">
+
+            <!-- Header -->
+            <FrameLayout
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="@drawable/bg_header_gradient" android:padding="24dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Olahraga" android:textColor="@color/app_text_primary" android:textSize="26sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Pantau aktivitas fisikmu hari ini" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+                </LinearLayout>
+                <ImageButton android:id="@+id/btnThemeToggle" android:layout_width="40dp" android:layout_height="40dp"
+                    android:layout_gravity="end|center_vertical" android:background="@drawable/bg_circle_glass"
+                    android:src="@drawable/ic_dark_mode" android:scaleType="centerInside" android:contentDescription="Ubah Tema" />
+            </FrameLayout>
+
+            <!-- Ringkasan Hari Ini -->
+            <LinearLayout
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="@drawable/bg_card"
+                android:padding="20dp" android:layout_marginHorizontal="20dp" android:layout_marginTop="20dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Aktivitas Hari Ini" android:textColor="@color/app_text_secondary" android:textSize="12sp" android:textStyle="bold" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginTop="16dp">
+                    <LinearLayout style="@style/MacroCol">
+                        <TextView android:id="@+id/tvSumMinutes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/health_green" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView style="@style/MacroLabel" android:text="menit" />
+                    </LinearLayout>
+                    <LinearLayout style="@style/MacroCol">
+                        <TextView android:id="@+id/tvSumCalories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/accent_teal" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView style="@style/MacroLabel" android:text="cal" />
+                    </LinearLayout>
+                    <LinearLayout style="@style/MacroCol">
+                        <TextView android:id="@+id/tvSumSessions" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/accent_sage" android:textSize="18sp" android:textStyle="bold" />
+                        <TextView style="@style/MacroLabel" android:text="sesi" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Analitik -->
+            <TextView style="@style/HomeSectionTitle" android:text="Analitik" />
+            <include android:id="@+id/analytics" layout="@layout/view_analytics"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="20dp" />
+
+            <!-- Filter + Riwayat -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginHorizontal="20dp" android:layout_marginTop="24dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="Riwayat Olahraga" android:textColor="@color/app_text_primary" android:textSize="18sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCount" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="0 sesi" android:textColor="@color/accent_teal" android:textSize="11sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <include android:id="@+id/filter" layout="@layout/view_time_filter"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" android:layout_marginTop="12dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView android:id="@+id/tvEmpty" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center" android:padding="24dp" android:text="Belum ada riwayat olahraga"
+                android:textColor="@color/app_text_secondary" android:textSize="14sp" android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:background="@drawable/bg_button_green"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        android:text="＋ Tambah Aktivitas"
+        android:textColor="@color/dark_deep_navy"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+</FrameLayout>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="24dp">
+
+        <!-- Header -->
+        <FrameLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="@drawable/bg_header_gradient" android:padding="24dp">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Nutrisi" android:textColor="@color/app_text_primary" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Pantau asupan harianmu" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+            </LinearLayout>
+            <ImageButton android:id="@+id/btnThemeToggle" android:layout_width="40dp" android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical" android:background="@drawable/bg_circle_glass"
+                android:src="@drawable/ic_dark_mode" android:scaleType="centerInside" android:contentDescription="Ubah Tema" />
+        </FrameLayout>
+
+        <!-- Kalori Hari Ini -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/bg_card"
+            android:padding="20dp" android:layout_marginHorizontal="20dp" android:layout_marginTop="20dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="bottom">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kalori Hari Ini" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+                    <TextView android:id="@+id/tvTotalCal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/app_text_primary" android:textSize="30sp" android:textStyle="bold" />
+                </LinearLayout>
+                <TextView android:id="@+id/tvPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0%" android:textColor="@color/health_green" android:textSize="22sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <ProgressBar android:id="@+id/progressCal" style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="12dp"
+                android:max="100" android:progress="0" android:progressDrawable="@drawable/bg_progress_track" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginTop="14dp">
+                <LinearLayout style="@style/MacroCol"><TextView android:id="@+id/tvCarbs" style="@style/MacroValue" android:textColor="@color/health_green" /><TextView style="@style/MacroLabel" android:text="🥦 Karbo" /></LinearLayout>
+                <LinearLayout style="@style/MacroCol"><TextView android:id="@+id/tvProtein" style="@style/MacroValue" android:textColor="@color/accent_teal" /><TextView style="@style/MacroLabel" android:text="🥩 Protein" /></LinearLayout>
+                <LinearLayout style="@style/MacroCol"><TextView android:id="@+id/tvFat" style="@style/MacroValue" android:textColor="@color/accent_sage" /><TextView style="@style/MacroLabel" android:text="🧈 Lemak" /></LinearLayout>
+                <LinearLayout style="@style/MacroCol"><TextView android:id="@+id/tvFiber" style="@style/MacroValue" android:textColor="@color/card_pink" /><TextView style="@style/MacroLabel" android:text="🌾 Serat" /></LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Analitik -->
+        <TextView style="@style/HomeSectionTitle" android:text="Analitik Kalori" />
+        <include android:id="@+id/analytics" layout="@layout/view_analytics"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="20dp" />
+
+        <!-- Rentang Waktu -->
+        <TextView style="@style/HomeSectionTitle" android:text="Rentang Waktu" />
+        <include android:id="@+id/filter" layout="@layout/view_time_filter"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="20dp" />
+
+        <!-- Kategori -->
+        <TextView style="@style/HomeSectionTitle" android:text="Kategori" />
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginHorizontal="20dp" android:baselineAligned="false">
+            <TextView android:id="@+id/catAll" style="@style/AppChip" android:text="Semua" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/catSarapan" style="@style/AppChip" android:text="Sarapan" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/catSiang" style="@style/AppChip" android:text="Siang" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/catMalam" style="@style/AppChip" android:text="Malam" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/catRingan" style="@style/AppChip" android:text="Ringan" android:textSize="9sp" />
+        </LinearLayout>
+
+        <!-- Pencarian -->
+        <EditText
+            android:id="@+id/etSearch" style="@style/AppField"
+            android:layout_marginHorizontal="20dp" android:layout_marginTop="20dp"
+            android:hint="Cari makanan..." android:inputType="text" />
+
+        <!-- Header daftar + tambah -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical"
+            android:layout_marginHorizontal="20dp" android:layout_marginTop="20dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="Daftar Makanan" android:textColor="@color/app_text_primary" android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:id="@+id/tvCount" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="0 item" android:textColor="@color/app_text_muted" android:textSize="12sp" android:layout_marginEnd="10dp" />
+            <TextView android:id="@+id/btnAdd" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="@drawable/bg_chip_selected" android:paddingHorizontal="14dp" android:paddingVertical="8dp"
+                android:text="+ Tambah" android:textColor="@color/dark_deep_navy" android:textSize="12sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp" android:layout_marginTop="12dp"
+            android:nestedScrollingEnabled="false" />
+
+        <TextView android:id="@+id/tvEmpty" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:padding="24dp" android:text="Makanan tidak ditemukan"
+            android:textColor="@color/app_text_secondary" android:textSize="14sp" android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

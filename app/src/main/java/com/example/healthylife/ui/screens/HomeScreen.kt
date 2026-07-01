@@ -228,7 +228,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                             Text(food.emoji, fontSize = 20.sp)
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(food.name, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                                Text("${food.calories} kcal", color = AccentTeal, fontSize = 11.sp)
+                                Text("${food.calories} cal", color = AccentTeal, fontSize = 11.sp)
                             }
                             if (isSelected) {
                                 Icon(Icons.Default.CheckCircle, null, tint = HealthGreen, modifier = Modifier.size(18.dp))
@@ -473,7 +473,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                 ProgressRingCard(
                     label = "Kalori",
                     value = "$totalCalories",
-                    unit = "kcal",
+                    unit = "cal",
                     progress = caloriesProgress,
                     color = HealthGreen,
                     emoji = "🍽️"
@@ -526,7 +526,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                     modifier = Modifier.weight(1f),
                     emoji = "🍽️",
                     label = "Makanan",
-                    sublabel = "${totalCalories} kcal",
+                    sublabel = "${totalCalories} cal",
                     color = HealthGreen,
                     onClick = { showNutritionDialog = true }
                 )
@@ -578,7 +578,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(ex.name, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text("${ex.durationMinutes} menit · ${ex.caloriesBurned} kcal terbakar", color = TextSecondary, fontSize = 12.sp)
+                        Text("${ex.durationMinutes} menit · ${ex.caloriesBurned} cal terbakar", color = TextSecondary, fontSize = 12.sp)
                     }
                     Box(
                         modifier = Modifier
@@ -609,7 +609,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                     fontSize = 18.sp
                 )
                 Text(
-                    text = "${totalCalories} / ${user.targetCalories} kcal",
+                    text = "${totalCalories} / ${user.targetCalories} cal",
                     color = AccentTeal,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -672,7 +672,7 @@ fun HomeScreen(padding: PaddingValues, repository: HealthRepository) {
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(food.name, color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                        Text("${food.calories} kcal · ${food.mealType}", color = TextSecondary, fontSize = 12.sp)
+                        Text("${food.calories} cal · ${food.mealType}", color = TextSecondary, fontSize = 12.sp)
                     }
                 }
             }

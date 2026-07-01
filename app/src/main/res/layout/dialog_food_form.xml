@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Pilih Ikon" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+        <GridLayout
+            android:id="@+id/emojiGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:columnCount="5" />
+
+        <EditText android:id="@+id/etName" style="@style/AppField"
+            android:layout_marginTop="12dp" android:hint="Nama Makanan" android:inputType="text" />
+
+        <EditText android:id="@+id/etCalories" style="@style/AppField"
+            android:layout_marginTop="12dp" android:hint="Kalori (cal)" android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="14dp" android:text="Informasi Gizi (gram)"
+            android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginTop="8dp" android:baselineAligned="false">
+            <EditText android:id="@+id/etCarbs" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Karbo" android:inputType="number" />
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <EditText android:id="@+id/etProtein" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Protein" android:inputType="number" />
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <EditText android:id="@+id/etFat" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Lemak" android:inputType="number" />
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <EditText android:id="@+id/etFiber" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Serat" android:inputType="number" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="14dp" android:text="Kategori Makan"
+            android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginTop="8dp" android:baselineAligned="false">
+            <TextView android:id="@+id/chipSarapan" style="@style/AppChip" android:text="Sarapan" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/chipSiang" style="@style/AppChip" android:text="Makan Siang" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/chipMalam" style="@style/AppChip" android:text="Makan Malam" android:textSize="9sp" />
+            <Space android:layout_width="6dp" android:layout_height="1dp" />
+            <TextView android:id="@+id/chipRingan" style="@style/AppChip" android:text="Ringan" android:textSize="9sp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

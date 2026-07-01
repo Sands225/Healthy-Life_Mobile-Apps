@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Pilih Ikon" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+        <GridLayout android:id="@+id/emojiGrid" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp" android:columnCount="5" />
+
+        <EditText android:id="@+id/etName" style="@style/AppField"
+            android:layout_marginTop="12dp" android:hint="Nama Aktivitas" android:inputType="text" />
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginTop="12dp" android:baselineAligned="false">
+            <EditText android:id="@+id/etDuration" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Durasi (menit)" android:inputType="number" />
+            <Space android:layout_width="10dp" android:layout_height="1dp" />
+            <EditText android:id="@+id/etCalories" style="@style/AppField" android:layout_width="0dp" android:layout_weight="1" android:hint="Kalori (cal)" android:inputType="number" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

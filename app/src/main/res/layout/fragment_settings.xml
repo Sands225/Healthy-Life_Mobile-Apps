@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/app_background">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_header_gradient"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="20dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="14dp"
+            android:background="@drawable/bg_circle_glass"
+            android:src="@drawable/ic_back"
+            android:scaleType="centerInside"
+            android:contentDescription="Kembali" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pengaturan"
+                android:textColor="@color/app_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ubah profil &amp; target kebugaranmu"
+                android:textColor="@color/app_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView style="@style/SettingsSection" android:text="Profil" />
+
+            <EditText
+                android:id="@+id/etName"
+                style="@style/AppField"
+                android:hint="Nama Lengkap"
+                android:inputType="textPersonName" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:baselineAligned="false">
+
+                <EditText
+                    android:id="@+id/etAge"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Umur"
+                    android:inputType="number" />
+
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+
+                <EditText
+                    android:id="@+id/etHeight"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Tinggi cm"
+                    android:inputType="number" />
+
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+
+                <EditText
+                    android:id="@+id/etWeight"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Berat kg"
+                    android:inputType="number" />
+            </LinearLayout>
+
+            <!-- Preview BMI -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_card_sm"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BMI (otomatis)"
+                        android:textColor="@color/app_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvSettingsBmi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="23.0"
+                        android:textColor="@color/app_text_primary"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvSettingsBmiStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill"
+                    android:backgroundTint="#262D9E6B"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="Normal"
+                    android:textColor="@color/health_green"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView style="@style/SettingsSection" android:text="Target Harian" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false">
+
+                <EditText
+                    android:id="@+id/etTargetCalories"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Kalori"
+                    android:inputType="number" />
+
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+
+                <EditText
+                    android:id="@+id/etTargetSleep"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Tidur jam"
+                    android:inputType="numberDecimal" />
+
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+
+                <EditText
+                    android:id="@+id/etTargetExercise"
+                    style="@style/AppField"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Olahraga"
+                    android:inputType="number" />
+            </LinearLayout>
+
+            <TextView style="@style/SettingsSection" android:text="Tampilan" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_card_sm"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvThemeLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mode Gelap"
+                    android:textColor="@color/app_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <Switch
+                    android:id="@+id/switchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:thumbTint="@color/health_green"
+                    android:trackTint="@color/app_slate_lighter" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvSaved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="✓ Perubahan tersimpan"
+                android:textColor="@color/health_green"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_green"
+                android:gravity="center"
+                android:paddingVertical="16dp"
+                android:text="Simpan Perubahan"
+                android:textColor="@color/dark_deep_navy"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

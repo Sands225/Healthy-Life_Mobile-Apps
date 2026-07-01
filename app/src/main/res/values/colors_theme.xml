@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Warna semantik mode terang (default) -->
+<resources>
+    <color name="app_background">@color/light_deep_navy</color>
+    <color name="app_header_start">@color/light_header_start</color>
+    <color name="app_nav_bar">@color/light_navy_dark</color>
+    <color name="app_slate">@color/light_slate</color>
+    <color name="app_slate_light">@color/light_slate_light</color>
+    <color name="app_slate_lighter">@color/light_slate_lighter</color>
+    <color name="app_text_primary">@color/light_text_primary</color>
+    <color name="app_text_secondary">@color/light_text_secondary</color>
+    <color name="app_text_muted">@color/light_text_muted</color>
+</resources>

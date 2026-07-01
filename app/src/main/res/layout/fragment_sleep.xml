@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="24dp">
+
+        <!-- Header -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_header_gradient"
+            android:padding="24dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Tidur" android:textColor="@color/app_text_primary"
+                    android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Pantau kualitas tidurmu" android:textColor="@color/app_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnThemeToggle"
+                android:layout_width="40dp" android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:background="@drawable/bg_circle_glass"
+                android:src="@drawable/ic_dark_mode" android:scaleType="centerInside"
+                android:contentDescription="Ubah Tema" />
+        </FrameLayout>
+
+        <!-- Ringkasan Tidur Semalam -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/bg_card"
+            android:padding="24dp" android:layout_marginHorizontal="20dp" android:layout_marginTop="20dp">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="🌙 Tidur Semalam" android:textColor="@color/health_green"
+                android:textSize="14sp" android:textStyle="bold" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center" android:layout_marginTop="16dp">
+                <TextView android:id="@+id/tvLastHours" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="8" android:textColor="@color/app_text_primary" android:textSize="60sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="jam" android:textColor="@color/app_text_secondary" android:textSize="20sp"
+                    android:layout_marginStart="4dp" android:layout_gravity="bottom" android:layout_marginBottom="12dp" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="@color/app_slate_light" android:layout_marginVertical="16dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rata-rata" android:textColor="@color/app_text_muted" android:textSize="11sp" />
+                    <TextView android:id="@+id/tvAvgHours" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="7.5 jam" android:textColor="@color/accent_teal" android:textSize="15sp" android:textStyle="bold" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="end">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Target Harian" android:textColor="@color/app_text_muted" android:textSize="11sp" />
+                    <TextView android:id="@+id/tvTargetHours" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="8 jam" android:textColor="@color/app_text_secondary" android:textSize="15sp" android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Form Catat Tidur -->
+        <TextView style="@style/HomeSectionTitle" android:text="Catat Tidur" />
+
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/bg_card"
+            android:padding="20dp" android:layout_marginHorizontal="20dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="Berapa jam kamu tidur?" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+                <TextView android:id="@+id/tvHoursValue" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="8.0 jam" android:textColor="@color/health_green" android:textSize="18sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/seekHours"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:max="240"
+                android:progress="80"
+                android:progressTint="@color/health_green"
+                android:thumbTint="@color/health_green" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" android:text="Kualitas Tidur"
+                android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginTop="8dp" android:baselineAligned="false">
+                <TextView android:id="@+id/chipBaik" style="@style/AppChip" android:text="😴 Baik" android:paddingVertical="14dp" />
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <TextView android:id="@+id/chipCukup" style="@style/AppChip" android:text="🙂 Cukup" android:paddingVertical="14dp" />
+                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <TextView android:id="@+id/chipBuruk" style="@style/AppChip" android:text="🥱 Buruk" android:paddingVertical="14dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:background="@drawable/bg_button_green"
+                android:gravity="center" android:paddingVertical="16dp"
+                android:text="Simpan Log Tidur" android:textColor="@color/dark_deep_navy"
+                android:textSize="16sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Analitik -->
+        <TextView style="@style/HomeSectionTitle" android:text="Analitik Tidur" />
+        <include android:id="@+id/analytics" layout="@layout/view_analytics"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp" />
+
+        <!-- Riwayat -->
+        <TextView style="@style/HomeSectionTitle" android:text="Riwayat Tidur" />
+        <include android:id="@+id/filter" layout="@layout/view_time_filter"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp" android:layout_marginTop="12dp"
+            android:nestedScrollingEnabled="false" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:padding="24dp"
+            android:text="Belum ada catatan tidur" android:textColor="@color/app_text_secondary"
+            android:textSize="14sp" android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

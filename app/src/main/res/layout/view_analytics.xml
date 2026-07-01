@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="16dp">
+
+    <!-- Pemilih mode: Hari Ini / Minggu Ini / Semua -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <TextView android:id="@+id/chipToday" style="@style/AppChip" android:text="Hari Ini" />
+        <Space android:layout_width="8dp" android:layout_height="1dp" />
+        <TextView android:id="@+id/chipWeek" style="@style/AppChip" android:text="Minggu Ini" />
+        <Space android:layout_width="8dp" android:layout_height="1dp" />
+        <TextView android:id="@+id/chipAll" style="@style/AppChip" android:text="Semua" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginTop="16dp">
+
+        <com.example.healthylife.ui.view.widget.BarChartView
+            android:id="@+id/analyticsChart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/analyticsSummary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Hari Ini"
+                android:textColor="@color/app_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvSummaryValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSummaryCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 catatan"
+                android:textColor="@color/app_text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

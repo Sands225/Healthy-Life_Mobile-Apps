@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:baselineAligned="false">
+
+    <TextView android:id="@+id/chipToday" style="@style/AppChip" android:text="Hari Ini" />
+    <Space android:layout_width="8dp" android:layout_height="1dp" />
+    <TextView android:id="@+id/chipWeek" style="@style/AppChip" android:text="Minggu Ini" />
+    <Space android:layout_width="8dp" android:layout_height="1dp" />
+    <TextView android:id="@+id/chipAll" style="@style/AppChip" android:text="Semua" />
+</LinearLayout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Pilih Ikon" android:textColor="@color/app_text_secondary" android:textSize="13sp" />
+
+    <GridLayout android:id="@+id/emojiGrid" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="8dp" android:columnCount="5" />
+
+    <EditText android:id="@+id/etName" style="@style/AppField"
+        android:layout_marginTop="12dp" android:hint="Nama Aktivitas" android:inputType="text" />
+
+    <EditText android:id="@+id/etCalPerMin" style="@style/AppField"
+        android:layout_marginTop="12dp" android:hint="Kalori per menit" android:inputType="number" />
+</LinearLayout>

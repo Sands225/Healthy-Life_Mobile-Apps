@@ -107,6 +107,14 @@ object DateUtils {
         return getFormatter().format(target.time)
     }
 
+    /** Label nomor minggu dalam tahun (contoh: W27) dari sebuah tanggal. */
+    fun weekOfYearLabel(dateStr: String): String {
+        val cal = midnightCalendar(dateStr) ?: return ""
+        cal.firstDayOfWeek = Calendar.MONDAY
+        cal.minimalDaysInFirstWeek = 4 // standar ISO-8601
+        return "W${cal.get(Calendar.WEEK_OF_YEAR)}"
+    }
+
     /** Format tanggal pendek "dd MMM" (contoh: 07 Jul). */
     fun formatDayMonth(dateStr: String): String {
         return try {
