@@ -283,7 +283,7 @@ Shift + F10
 
 # 🎯 Roadmap
 
-### ✅ Selesai
+### ✅ Finished
 
 - Home Dashboard
 - BMI Dashboard
@@ -298,12 +298,6 @@ Shift + F10
 - Analytics Widget
 - RecyclerView
 - Theme Preference
-
-### 🚧 Dalam Pengembangan
-
-- Authentication
-- Daily Reminder
-- Notification
 - Goal Tracking
 
 ---
