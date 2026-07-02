@@ -87,7 +87,7 @@ class NutritionFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) { search = s?.toString() ?: ""; renderList() }
         })
 
-        binding.btnAdd.setOnClickListener { showForm(null) }
+        binding.fabAdd.setOnClickListener { showForm(null) }
     }
 
     override fun onResume() {
