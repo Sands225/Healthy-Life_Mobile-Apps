@@ -295,9 +295,12 @@ Shift + F10
 - Daily Reminder
 - Notification
 - Goal Tracking
+<<<<<<< HEAD
 - Achievement System
 - Export Health Report
 - Cloud Synchronization
+=======
+>>>>>>> d2978c1ed4df3a0793227090de166a39838dc52c
 
 ---
 

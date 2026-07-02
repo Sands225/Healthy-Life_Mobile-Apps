@@ -64,16 +64,29 @@
                     android:scaleType="centerInside"
                     android:contentDescription="Ubah Tema" />
 
-                <TextView
-                    android:id="@+id/tvAvatar"
+                <FrameLayout
                     android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:background="@drawable/bg_avatar"
-                    android:gravity="center"
-                    android:text="S"
-                    android:textColor="@color/dark_deep_navy"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:layout_height="52dp">
+
+                    <TextView
+                        android:id="@+id/tvAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_avatar"
+                        android:gravity="center"
+                        android:text="S"
+                        android:textColor="@color/dark_deep_navy"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/ivAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        android:contentDescription="Foto Profil" />
+                </FrameLayout>
             </LinearLayout>
         </FrameLayout>
 
@@ -95,6 +108,60 @@
                 android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
             <include android:id="@+id/ringSleep" layout="@layout/item_progress_ring"
                 android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+        </LinearLayout>
+
+        <!-- Indeks BMI -->
+        <TextView
+            style="@style/HomeSectionTitle"
+            android:text="Indeks BMI" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="20dp"
+            android:layout_marginHorizontal="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvHomeBmi"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="23.0"
+                    android:textColor="@color/app_text_primary"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvHomeBmiStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill"
+                    android:backgroundTint="#262D9E6B"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="Normal ✓"
+                    android:textColor="@color/health_green"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressHomeBmi"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="12dp"
+                android:max="100"
+                android:progress="60"
+                android:progressDrawable="@drawable/bg_progress_track" />
         </LinearLayout>
 
         <!-- Tambah Cepat -->

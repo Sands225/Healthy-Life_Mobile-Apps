@@ -1,10 +1,18 @@
 package com.example.healthylife.ui.view
 
 import android.content.res.ColorStateList
+import android.graphics.Outline
+import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
@@ -13,6 +21,8 @@ import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
 import com.example.healthylife.databinding.FragmentProfileBinding
 import com.example.healthylife.model.User
+import com.example.healthylife.ui.view.widget.CropImageView
+import com.example.healthylife.util.AvatarStore
 import com.example.healthylife.util.ThemePrefs
 
 class ProfileFragment : Fragment() {
@@ -21,6 +31,51 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val repository by lazy { HealthRepository(requireContext().applicationContext) }
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) showCropDialog(uri)
+    }
+
+    private fun showCropDialog(uri: Uri) {
+        val bmp = AvatarStore.decode(requireContext(), uri) ?: return
+        val crop = CropImageView(requireContext()).apply { setBitmap(bmp) }
+        val density = resources.displayMetrics.density
+        val sizePx = (300 * density).toInt()
+        val pad = (16 * density).toInt()
+
+        val rotateBtn = android.widget.TextView(requireContext()).apply {
+            text = "🔄  Putar"
+            gravity = Gravity.CENTER
+            setBackgroundResource(R.drawable.bg_chip_unselected)
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.app_text_primary))
+            setPadding(pad, pad / 2, pad, pad / 2)
+            setOnClickListener { crop.rotate90() }
+        }
+
+        val column = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, 0)
+            addView(crop, android.widget.LinearLayout.LayoutParams(sizePx, sizePx).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+            })
+            addView(rotateBtn, android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = pad })
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Atur Foto")
+            .setView(column)
+            .setPositiveButton("Simpan") { _, _ ->
+                val result = crop.getResult(512)
+                if (result != null && AvatarStore.saveBitmap(requireContext(), result)) loadAvatar()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,11 +103,31 @@ class ProfileFragment : Fragment() {
         setupStat(binding.statAge, "🎂", "Umur", "tahun", R.color.accent_sage)
         setupStat(binding.statHeight, "📏", "Tinggi", "cm", R.color.accent_teal)
         setupStat(binding.statWeight, "⚖️", "Berat", "kg", R.color.health_green)
+
+        // Foto profil: klip lingkaran + pilih gambar
+        binding.ivAvatar.clipToOutline = true
+        binding.ivAvatar.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(v: View, outline: Outline) {
+                outline.setOval(0, 0, v.width, v.height)
+            }
+        }
+        binding.avatarContainer.setOnClickListener {
+            pickImage.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
     }
 
     override fun onResume() {
         super.onResume()
         bindUser(repository.getUser(1) ?: DummyData.currentUser)
+        loadAvatar()
+    }
+
+    private fun loadAvatar() {
+        val hasPhoto = AvatarStore.loadInto(binding.ivAvatar)
+        binding.ivAvatar.visibility = if (hasPhoto) View.VISIBLE else View.GONE
+        binding.tvAvatar.visibility = if (hasPhoto) View.GONE else View.VISIBLE
     }
 
     private fun setupStat(

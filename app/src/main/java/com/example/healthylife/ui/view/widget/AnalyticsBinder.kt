@@ -14,14 +14,23 @@ class AnalyticsBinder(
     private val accentColor: Int,
     private val trackColor: Int,
     private val labelColor: Int,
+    private val stateKey: String,
     private val formatter: (Float) -> String = { it.toInt().toString() }
 ) {
     private var data: List<Pair<String, Float>> = emptyList()
 
     private val segmented = Segmented(
         listOf(binding.chipToday, binding.chipWeek, binding.chipAll),
-        initial = 1
-    ) { render() }
+        initial = savedModes[stateKey] ?: 1
+    ) {
+        savedModes[stateKey] = it
+        render()
+    }
+
+    companion object {
+        // Menyimpan mode terpilih per layar agar tetap saat pindah halaman.
+        private val savedModes = mutableMapOf<String, Int>()
+    }
 
     fun setData(newData: List<Pair<String, Float>>) {
         data = newData

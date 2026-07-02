@@ -1,12 +1,12 @@
 package com.example.healthylife.ui.view
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import com.example.healthylife.R
 import com.example.healthylife.data.DummyData
@@ -74,6 +74,32 @@ class HomeFragment : Fragment() {
         binding.tvName.text = user.name
         binding.tvAvatar.text = user.name.take(1).uppercase()
 
+        // Foto profil (jika ada)
+        binding.ivAvatar.clipToOutline = true
+        binding.ivAvatar.outlineProvider = object : android.view.ViewOutlineProvider() {
+            override fun getOutline(v: View, outline: android.graphics.Outline) {
+                outline.setOval(0, 0, v.width, v.height)
+            }
+        }
+        val hasPhoto = com.example.healthylife.util.AvatarStore.loadInto(binding.ivAvatar)
+        binding.ivAvatar.visibility = if (hasPhoto) View.VISIBLE else View.GONE
+        binding.tvAvatar.visibility = if (hasPhoto) View.GONE else View.VISIBLE
+
+        // BMI
+        val bmi = if (user.height > 0f) user.weight / ((user.height / 100f) * (user.height / 100f)) else 0f
+        binding.tvHomeBmi.text = String.format("%.1f", bmi)
+        val (bmiLabel, bmiColorRes) = when {
+            bmi < 18.5 -> "Kurus" to R.color.accent_teal
+            bmi < 25f  -> "Normal ✓" to R.color.health_green
+            bmi < 30f  -> "Gemuk" to R.color.card_pink
+            else       -> "Obesitas" to R.color.card_pink
+        }
+        val bmiColor = color(bmiColorRes)
+        binding.tvHomeBmiStatus.text = bmiLabel
+        binding.tvHomeBmiStatus.setTextColor(bmiColor)
+        binding.tvHomeBmiStatus.backgroundTintList = ColorStateList.valueOf(ColorUtils.setAlphaComponent(bmiColor, 38))
+        binding.progressHomeBmi.progress = (((bmi - 15f) / 25f) * 100).coerceIn(0f, 100f).toInt()
+
         val todayFoods = foods.filter { DateUtils.isToday(it.date) }
         val todayExercises = exercises.filter { DateUtils.isToday(it.date) }
         val sleep = sleeps.firstOrNull { DateUtils.isToday(it.date) }
@@ -119,7 +145,7 @@ class HomeFragment : Fragment() {
                 row.tvEmoji.text = ex.emoji
                 row.tvTitle.text = ex.name
                 row.tvSubtitle.text = "${ex.durationMinutes} menit · ${ex.caloriesBurned} cal"
-                row.tvTrailing.text = "Selesai ✓"
+                row.tvTrailing.text = "✓"
                 binding.activityContainer.addView(row.root)
             }
         }
@@ -161,6 +187,8 @@ class HomeFragment : Fragment() {
         ring.tvLabel.text = label
     }
 
+    private fun color(res: Int) = ContextCompat.getColor(requireContext(), res)
+
     private fun addEmptyRow(container: ViewGroup, text: String) {
         val tv = android.widget.TextView(requireContext()).apply {
             this.text = text
@@ -171,62 +199,25 @@ class HomeFragment : Fragment() {
         container.addView(tv)
     }
 
-    // ── Dialog Tambah Cepat ─────────────────────────────────────────────────────
+    // ── Tambah Cepat: pakai form yang sama dengan menu dedicated ─────────────────
     private fun showSleepDialog() {
-        val input = EditText(requireContext()).apply {
-            hint = "Jam tidur (0-24)"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            setText("8")
+        FormDialogs.showSleep(this, null) { rec ->
+            repository.insertSleepRecord(rec.copy(date = DateUtils.getTodayDateString()))
+            loadData(); render()
         }
-        AlertDialog.Builder(requireContext())
-            .setTitle("🌙 Log Tidur")
-            .setView(pad(input))
-            .setPositiveButton("Simpan") { _, _ ->
-                val h = (input.text.toString().toFloatOrNull() ?: 8f).coerceIn(0f, 24f)
-                repository.insertSleepRecord(SleepRecord(0, DateUtils.getTodayDateString(), "", "", h, "Cukup"))
-                loadData(); render()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 
     private fun showFoodDialog() {
-        val options = DummyData.foods.distinctBy { it.name }
-        val names = options.map { "${it.emoji} ${it.name} (${it.calories} cal)" }.toTypedArray()
-        AlertDialog.Builder(requireContext())
-            .setTitle("🍽️ Log Makanan")
-            .setItems(names) { _, which ->
-                val f = options[which]
-                repository.insertFood(f.copy(id = 0, date = DateUtils.getTodayDateString()))
-                loadData(); render()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+        FormDialogs.showFood(this, null) { food ->
+            repository.insertFood(food.copy(date = DateUtils.getTodayDateString()))
+            loadData(); render()
+        }
     }
 
     private fun showExerciseDialog() {
-        val input = EditText(requireContext()).apply {
-            hint = "Durasi (menit)"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-            setText("30")
-        }
-        AlertDialog.Builder(requireContext())
-            .setTitle("💪 Log Olahraga")
-            .setView(pad(input))
-            .setPositiveButton("Simpan") { _, _ ->
-                val m = input.text.toString().toIntOrNull() ?: 30
-                repository.insertExercise(Exercise(0, "Lari", "🏃", m, m * 9, DateUtils.getTodayDateString()))
-                loadData(); render()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun pad(v: View): View {
-        val p = (24 * resources.displayMetrics.density).toInt()
-        return android.widget.FrameLayout(requireContext()).apply {
-            setPadding(p, p / 2, p, 0)
-            addView(v)
+        FormDialogs.showExercise(this, null) { ex ->
+            repository.insertExercise(ex.copy(date = DateUtils.getTodayDateString()))
+            loadData(); render()
         }
     }
 

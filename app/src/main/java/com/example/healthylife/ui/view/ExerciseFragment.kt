@@ -7,12 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.healthylife.R
 import com.example.healthylife.data.DummyData
 import com.example.healthylife.data.HealthRepository
@@ -20,8 +20,8 @@ import com.example.healthylife.databinding.DialogAddTemplateBinding
 import com.example.healthylife.databinding.DialogExerciseFormBinding
 import com.example.healthylife.databinding.DialogQuickAddBinding
 import com.example.healthylife.databinding.FragmentExerciseBinding
+import com.example.healthylife.databinding.ItemExerciseBinding
 import com.example.healthylife.model.Exercise
-import com.example.healthylife.ui.view.adapter.ExerciseAdapter
 import com.example.healthylife.ui.view.widget.AnalyticsBinder
 import com.example.healthylife.ui.view.widget.Segmented
 import com.example.healthylife.util.DateUtils
@@ -38,7 +38,6 @@ class ExerciseFragment : Fragment() {
     private val repository by lazy { HealthRepository(requireContext().applicationContext) }
     private var exercises: List<Exercise> = DummyData.exercises
 
-    private lateinit var adapter: ExerciseAdapter
     private lateinit var analytics: AnalyticsBinder
     private lateinit var filter: Segmented
 
@@ -67,15 +66,12 @@ class ExerciseFragment : Fragment() {
         )
         binding.btnThemeToggle.setOnClickListener { ThemePrefs.toggle(requireContext()) }
 
-        adapter = ExerciseAdapter(emptyList(), onEdit = { showForm(it) }, onDelete = ::confirmDelete)
-        binding.recycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.recycler.adapter = adapter
-
         analytics = AnalyticsBinder(
             binding.analytics, unit = "cal",
             accentColor = color(R.color.accent_teal),
             trackColor = color(R.color.app_slate_light),
-            labelColor = color(R.color.app_text_muted)
+            labelColor = color(R.color.app_text_muted),
+            stateKey = "exercise"
         )
 
         filter = Segmented(
@@ -107,10 +103,32 @@ class ExerciseFragment : Fragment() {
     private fun renderList() {
         val mode = TimeFilter.values()[filter.selected]
         val filtered = exercises.filter { mode.matches(it.date) }
-        adapter.submit(filtered)
         binding.tvCount.text = "${filtered.size} sesi"
         binding.tvEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        binding.recycler.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
+
+        binding.historyContainer.removeAllViews()
+        filtered.forEach { ex ->
+            val row = ItemExerciseBinding.inflate(layoutInflater, binding.historyContainer, false)
+            row.tvEmoji.text = ex.emoji
+            row.tvName.text = ex.name
+            row.tvDetail.text = "${ex.durationMinutes} menit · ${ex.caloriesBurned} cal"
+            row.tvDate.text = DateUtils.toRelativeString(ex.date)
+            row.btnMore.setOnClickListener { anchor ->
+                PopupMenu(anchor.context, anchor).apply {
+                    menu.add("Edit")
+                    menu.add("Hapus")
+                    setOnMenuItemClickListener { item ->
+                        when (item.title) {
+                            "Edit" -> showForm(ex)
+                            "Hapus" -> confirmDelete(ex)
+                        }
+                        true
+                    }
+                    show()
+                }
+            }
+            binding.historyContainer.addView(row.root)
+        }
     }
 
     // ── Chooser ──────────────────────────────────────────────────────────────
@@ -125,35 +143,10 @@ class ExerciseFragment : Fragment() {
 
     // ── Manual / Edit ────────────────────────────────────────────────────────
     private fun showForm(initial: Exercise?) {
-        val db = DialogExerciseFormBinding.inflate(layoutInflater)
-        var selectedEmoji = initial?.emoji ?: emojiOptions.first()
-        buildEmojiGrid(db.emojiGrid, { selectedEmoji }, { selectedEmoji = it })
-
-        initial?.let {
-            db.etName.setText(it.name)
-            db.etDuration.setText(it.durationMinutes.toString())
-            db.etCalories.setText(it.caloriesBurned.toString())
+        FormDialogs.showExercise(this, initial) { ex ->
+            if (ex.id == 0) repository.insertExercise(ex) else repository.updateExercise(ex)
+            loadData(); renderAll()
         }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (initial != null) "Edit Aktivitas" else "Tambah Manual")
-            .setView(db.root)
-            .setPositiveButton("Simpan") { _, _ ->
-                val name = db.etName.text.toString().trim()
-                if (name.isEmpty()) return@setPositiveButton
-                val ex = Exercise(
-                    id = initial?.id ?: 0,
-                    name = name,
-                    emoji = selectedEmoji,
-                    durationMinutes = db.etDuration.text.toString().toIntOrNull() ?: 30,
-                    caloriesBurned = db.etCalories.text.toString().toIntOrNull() ?: 0,
-                    date = initial?.date ?: DateUtils.getTodayDateString()
-                )
-                if (ex.id == 0) repository.insertExercise(ex) else repository.updateExercise(ex)
-                loadData(); renderAll()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 
     private fun confirmDelete(ex: Exercise) {
