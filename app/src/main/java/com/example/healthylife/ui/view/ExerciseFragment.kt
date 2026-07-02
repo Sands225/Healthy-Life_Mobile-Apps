@@ -143,35 +143,10 @@ class ExerciseFragment : Fragment() {
 
     // ── Manual / Edit ────────────────────────────────────────────────────────
     private fun showForm(initial: Exercise?) {
-        val db = DialogExerciseFormBinding.inflate(layoutInflater)
-        var selectedEmoji = initial?.emoji ?: emojiOptions.first()
-        buildEmojiGrid(db.emojiGrid, { selectedEmoji }, { selectedEmoji = it })
-
-        initial?.let {
-            db.etName.setText(it.name)
-            db.etDuration.setText(it.durationMinutes.toString())
-            db.etCalories.setText(it.caloriesBurned.toString())
+        FormDialogs.showExercise(this, initial) { ex ->
+            if (ex.id == 0) repository.insertExercise(ex) else repository.updateExercise(ex)
+            loadData(); renderAll()
         }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (initial != null) "Edit Aktivitas" else "Tambah Manual")
-            .setView(db.root)
-            .setPositiveButton("Simpan") { _, _ ->
-                val name = db.etName.text.toString().trim()
-                if (name.isEmpty()) return@setPositiveButton
-                val ex = Exercise(
-                    id = initial?.id ?: 0,
-                    name = name,
-                    emoji = selectedEmoji,
-                    durationMinutes = db.etDuration.text.toString().toIntOrNull() ?: 30,
-                    caloriesBurned = db.etCalories.text.toString().toIntOrNull() ?: 0,
-                    date = initial?.date ?: DateUtils.getTodayDateString()
-                )
-                if (ex.id == 0) repository.insertExercise(ex) else repository.updateExercise(ex)
-                loadData(); renderAll()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 
     private fun confirmDelete(ex: Exercise) {

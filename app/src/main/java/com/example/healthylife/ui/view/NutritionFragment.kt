@@ -43,8 +43,6 @@ class NutritionFragment : Fragment() {
     private var search = ""
 
     private val categoryValues = listOf("Semua", "Sarapan", "Makan Siang", "Makan Malam", "Makanan Ringan")
-    private val formCategories = listOf("Sarapan", "Makan Siang", "Makan Malam", "Makanan Ringan")
-    private val emojiOptions = listOf("🍚","🍛","🍜","🥗","🍗","🥩","🐟","🥚","🥣","🥞","🍕","🍔","🌮","🥙","🥤","☕","🍎","🍌","🥑","🧆")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -132,73 +130,10 @@ class NutritionFragment : Fragment() {
     }
 
     private fun showForm(initial: Food?) {
-        val db = DialogFoodFormBinding.inflate(layoutInflater)
-        var selectedEmoji = initial?.emoji ?: ""
-
-        // Grid emoji
-        val size = (44 * resources.displayMetrics.density).toInt()
-        val margin = (4 * resources.displayMetrics.density).toInt()
-        val emojiViews = mutableListOf<TextView>()
-        fun refreshEmoji() {
-            emojiViews.forEachIndexed { i, tv ->
-                tv.setBackgroundResource(
-                    if (emojiOptions[i] == selectedEmoji) R.drawable.bg_chip_selected else R.drawable.bg_chip_unselected
-                )
-            }
+        FormDialogs.showFood(this, initial) { food ->
+            if (food.id == 0) repository.insertFood(food) else repository.updateFood(food)
+            loadData(); renderAll()
         }
-        emojiOptions.forEach { emoji ->
-            val tv = TextView(requireContext()).apply {
-                text = emoji
-                textSize = 20f
-                gravity = Gravity.CENTER
-                val lp = GridLayout.LayoutParams().apply {
-                    width = size; height = size; setMargins(margin, margin, margin, margin)
-                }
-                layoutParams = lp
-                setOnClickListener { selectedEmoji = emoji; refreshEmoji() }
-            }
-            emojiViews.add(tv)
-            db.emojiGrid.addView(tv)
-        }
-        refreshEmoji()
-
-        initial?.let {
-            db.etName.setText(it.name)
-            db.etCalories.setText(it.calories.toString())
-            db.etCarbs.setText(it.carbs.toInt().toString())
-            db.etProtein.setText(it.protein.toInt().toString())
-            db.etFat.setText(it.fat.toInt().toString())
-            db.etFiber.setText(it.fiber.toInt().toString())
-        }
-
-        val catSeg = Segmented(
-            listOf(db.chipSarapan, db.chipSiang, db.chipMalam, db.chipRingan),
-            initial = formCategories.indexOf(initial?.mealType).coerceAtLeast(0)
-        ) { }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (initial != null) "Edit Makanan" else "Tambah Makanan")
-            .setView(db.root)
-            .setPositiveButton("Simpan") { _, _ ->
-                val name = db.etName.text.toString().trim()
-                if (name.isEmpty() || selectedEmoji.isEmpty()) return@setPositiveButton
-                val food = Food(
-                    id = initial?.id ?: 0,
-                    name = name,
-                    emoji = selectedEmoji,
-                    calories = db.etCalories.text.toString().toIntOrNull() ?: 0,
-                    carbs = db.etCarbs.text.toString().toFloatOrNull() ?: 0f,
-                    protein = db.etProtein.text.toString().toFloatOrNull() ?: 0f,
-                    fat = db.etFat.text.toString().toFloatOrNull() ?: 0f,
-                    fiber = db.etFiber.text.toString().toFloatOrNull() ?: 0f,
-                    mealType = formCategories[catSeg.selected],
-                    date = initial?.date ?: DateUtils.getTodayDateString()
-                )
-                if (food.id == 0) repository.insertFood(food) else repository.updateFood(food)
-                loadData(); renderAll()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 
     private fun confirmDelete(food: Food) {

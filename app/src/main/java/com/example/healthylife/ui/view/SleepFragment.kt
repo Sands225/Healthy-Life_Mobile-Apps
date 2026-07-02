@@ -125,22 +125,10 @@ class SleepFragment : Fragment() {
     }
 
     private fun showEditDialog(rec: SleepRecord) {
-        val dialogBinding = DialogEditSleepBinding.inflate(layoutInflater)
-        dialogBinding.etHours.setText(rec.durationHours.toString())
-        val seg = Segmented(
-            listOf(dialogBinding.chipBaik, dialogBinding.chipCukup, dialogBinding.chipBuruk),
-            initial = qualities.indexOf(rec.quality).coerceAtLeast(0)
-        ) { }
-        AlertDialog.Builder(requireContext())
-            .setTitle("Edit Log Tidur")
-            .setView(dialogBinding.root)
-            .setPositiveButton("Simpan") { _, _ ->
-                val h = (dialogBinding.etHours.text.toString().toFloatOrNull() ?: rec.durationHours).coerceIn(0f, 24f)
-                repository.updateSleepRecord(rec.copy(durationHours = h, quality = qualities[seg.selected]))
-                loadData(); renderAll()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+        FormDialogs.showSleep(this, rec) { updated ->
+            repository.updateSleepRecord(updated.copy(id = rec.id, date = rec.date))
+            loadData(); renderAll()
+        }
     }
 
     private fun confirmDelete(rec: SleepRecord) {

@@ -5,6 +5,9 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import com.example.healthylife.databinding.ActivityMainBinding
 import com.example.healthylife.databinding.ItemBottomTabBinding
@@ -38,6 +41,14 @@ class MainActivity : AppCompatActivity(), Navigator {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Hindari konten menimpa status bar / navigation bar (edge-to-edge Android 15)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.container.updatePadding(top = bars.top)
+            binding.bottomBar.updatePadding(bottom = bars.bottom)
+            insets
+        }
 
         tabs = listOf(
             TabDef(binding.tabHome, R.drawable.ic_home, "Beranda") { HomeFragment() },
