@@ -21,6 +21,7 @@ Fokus utama aplikasi meliputi:
 - 🥗 Nutrisi dan konsumsi makanan
 - 😴 Monitoring tidur
 - ❤️ Profil kesehatan pengguna
+- ⚖️ Body Mass Index (BMI)
 - 📊 Visualisasi statistik aktivitas
 
 ---
@@ -31,8 +32,10 @@ Fokus utama aplikasi meliputi:
 
 - Ringkasan aktivitas harian
 - Statistik kesehatan
-- Ring Progress
+- Body Mass Index (BMI)
+- Ring Progress Indicator
 - Bar Chart Analytics
+- Quick Access Popup Menu
 - Quick Navigation Menu
 
 ---
@@ -69,6 +72,7 @@ Fokus utama aplikasi meliputi:
 
 - Informasi pengguna
 - Body Mass Index (BMI)
+- Upload dan update foto profil
 - Data kesehatan dasar
 
 ---
@@ -89,6 +93,7 @@ HealthyLife telah memiliki komponen visualisasi data berupa:
 - Bar Chart
 - Activity Analytics
 - Daily Summary
+- Improved analytics state management
 
 ---
 
@@ -210,6 +215,8 @@ Aplikasi memiliki beberapa komponen visual yang dibuat secara khusus.
 - 🔵 Ring Progress Indicator
 - 📊 Activity Analytics
 - 📅 Daily Summary
+- ⚖️ BMI Information Card
+- ⚡ Quick Access Popup
 
 ---
 
@@ -279,10 +286,13 @@ Shift + F10
 ### ✅ Selesai
 
 - Home Dashboard
+- BMI Dashboard
+- Quick Access Popup
 - Exercise Module
 - Nutrition Module
 - Sleep Module
 - Profile
+- Upload Profile Picture
 - Settings
 - SQLite Database
 - Analytics Widget
