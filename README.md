@@ -295,9 +295,6 @@ Shift + F10
 - Daily Reminder
 - Notification
 - Goal Tracking
-- Achievement System
-- Export Health Report
-- Cloud Synchronization
 
 ---
 
