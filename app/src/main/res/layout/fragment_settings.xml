@@ -58,7 +58,9 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <TextView style="@style/SettingsSection" android:text="Profil" />
+            <TextView
+                style="@style/SettingsSection"
+                android:text="Profil" />
 
             <EditText
                 android:id="@+id/etName"
@@ -70,8 +72,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:baselineAligned="false">
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <EditText
                     android:id="@+id/etAge"
@@ -81,7 +83,9 @@
                     android:hint="Umur"
                     android:inputType="number" />
 
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
 
                 <EditText
                     android:id="@+id/etHeight"
@@ -91,7 +95,9 @@
                     android:hint="Tinggi cm"
                     android:inputType="number" />
 
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
 
                 <EditText
                     android:id="@+id/etWeight"
@@ -107,9 +113,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:background="@drawable/bg_card_sm"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="16dp">
 
                 <LinearLayout
@@ -121,7 +127,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="BMI (otomatis)"
+                        android:text="BMI"
                         android:textColor="@color/app_text_secondary"
                         android:textSize="12sp" />
 
@@ -149,13 +155,15 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView style="@style/SettingsSection" android:text="Target Harian" />
+            <TextView
+                style="@style/SettingsSection"
+                android:text="Target Harian" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:baselineAligned="false">
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <EditText
                     android:id="@+id/etTargetCalories"
@@ -165,7 +173,9 @@
                     android:hint="Kalori"
                     android:inputType="number" />
 
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
 
                 <EditText
                     android:id="@+id/etTargetSleep"
@@ -175,7 +185,9 @@
                     android:hint="Tidur jam"
                     android:inputType="numberDecimal" />
 
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
 
                 <EditText
                     android:id="@+id/etTargetExercise"
@@ -186,14 +198,16 @@
                     android:inputType="number" />
             </LinearLayout>
 
-            <TextView style="@style/SettingsSection" android:text="Tampilan" />
+            <TextView
+                style="@style/SettingsSection"
+                android:text="Tampilan" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:background="@drawable/bg_card_sm"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="16dp">
 
                 <TextView

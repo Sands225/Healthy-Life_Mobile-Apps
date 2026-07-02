@@ -119,7 +119,7 @@ class HomeFragment : Fragment() {
                 row.tvEmoji.text = ex.emoji
                 row.tvTitle.text = ex.name
                 row.tvSubtitle.text = "${ex.durationMinutes} menit · ${ex.caloriesBurned} cal"
-                row.tvTrailing.text = "Selesai ✓"
+                row.tvTrailing.text = "✓"
                 binding.activityContainer.addView(row.root)
             }
         }

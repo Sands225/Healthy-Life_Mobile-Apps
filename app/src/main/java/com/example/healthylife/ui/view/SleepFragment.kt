@@ -64,7 +64,8 @@ class SleepFragment : Fragment() {
             unit = "jam",
             accentColor = color(R.color.accent_teal),
             trackColor = color(R.color.app_slate_light),
-            labelColor = color(R.color.app_text_muted)
+            labelColor = color(R.color.app_text_muted),
+            stateKey = "sleep"
         )
 
         filter = Segmented(
