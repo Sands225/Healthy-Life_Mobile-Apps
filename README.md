@@ -203,7 +203,6 @@ HealthyLife menggunakan kombinasi beberapa mekanisme penyimpanan data:
 
 - SQLite Database
 - SharedPreferences
-- Dummy Data Repository (development)
 
 ---
 
