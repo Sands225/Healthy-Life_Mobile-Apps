@@ -65,9 +65,10 @@ class HomeFragment : Fragment() {
 
     private fun loadData() {
         repository.getUser(1)?.let { user = it }
-        exercises = repository.getAllExercises().ifEmpty { DummyData.exercises }
-        foods = repository.getAllFoods().ifEmpty { DummyData.foods }
-        sleeps = repository.getAllSleepRecords().ifEmpty { DummyData.sleepRecords }
+
+        exercises = repository.getAllExercises()
+        foods = repository.getAllFoods()
+        sleeps = repository.getAllSleepRecords()
     }
 
     private fun render() {
@@ -108,18 +109,61 @@ class HomeFragment : Fragment() {
         val totalCalories = todayFoods.sumOf { it.calories }
         val minutes = todayExercises.sumOf { it.durationMinutes }
         val hours = sleep.durationHours
+        val calorieProgress =
+            if (user.targetCalories > 0)
+                totalCalories.toFloat() / user.targetCalories
+            else
+                0f
+
+        val exerciseProgress =
+            if (user.targetExerciseMinutes > 0)
+                minutes.toFloat() / user.targetExerciseMinutes
+            else
+                0f
+
+        val sleepProgress =
+            if (user.targetSleepHours > 0f)
+                hours / user.targetSleepHours
+            else
+                0f
 
         val slateLight = ContextCompat.getColor(requireContext(), R.color.app_slate_light)
         val green = ContextCompat.getColor(requireContext(), R.color.health_green)
         val teal = ContextCompat.getColor(requireContext(), R.color.accent_teal)
         val sage = ContextCompat.getColor(requireContext(), R.color.accent_sage)
 
-        bindRing(binding.ringCalories, "🍽️", "$totalCalories", "cal", "Kalori",
-            totalCalories.toFloat() / user.targetCalories, green, slateLight)
-        bindRing(binding.ringExercise, "💪", "$minutes", "menit", "Olahraga",
-            minutes.toFloat() / user.targetExerciseMinutes, teal, slateLight)
-        bindRing(binding.ringSleep, "🌙", "${hours.toInt()}", "jam", "Tidur",
-            hours / user.targetSleepHours, sage, slateLight)
+        bindRing(
+            binding.ringCalories,
+            "🍽️",
+            "$totalCalories",
+            "cal",
+            "Kalori",
+            calorieProgress,
+            green,
+            slateLight
+        )
+
+        bindRing(
+            binding.ringExercise,
+            "💪",
+            "$minutes",
+            "menit",
+            "Olahraga",
+            exerciseProgress,
+            teal,
+            slateLight
+        )
+
+        bindRing(
+            binding.ringSleep,
+            "🌙",
+            "${hours.toInt()}",
+            "jam",
+            "Tidur",
+            sleepProgress,
+            sage,
+            slateLight
+        )
 
         // Quick-add cards
         binding.qaSleep.tvIcon.text = "🌙"
@@ -151,9 +195,13 @@ class HomeFragment : Fragment() {
         }
 
         // Makanan hari ini
-        binding.tvCaloriesSummary.text = "$totalCalories / ${user.targetCalories} cal"
+        binding.tvCaloriesSummary.text =
+            "$totalCalories / ${user.targetCalories} cal"
+
         binding.progressCalories.progress =
-            ((totalCalories.toFloat() / user.targetCalories) * 100).coerceIn(0f, 100f).toInt()
+            (calorieProgress * 100)
+                .coerceIn(0f, 100f)
+                .toInt()
         binding.tvCarbs.text = "${todayFoods.sumOf { it.carbs.toDouble() }.toInt()}g"
         binding.tvProtein.text = "${todayFoods.sumOf { it.protein.toDouble() }.toInt()}g"
         binding.tvFat.text = "${todayFoods.sumOf { it.fat.toDouble() }.toInt()}g"

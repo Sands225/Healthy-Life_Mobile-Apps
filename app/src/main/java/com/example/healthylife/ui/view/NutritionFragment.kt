@@ -97,15 +97,26 @@ class NutritionFragment : Fragment() {
 
     private fun loadData() {
         repository.getUser(1)?.let { user = it }
-        foods = repository.getAllFoods().ifEmpty { DummyData.foods }
+        foods = repository.getAllFoods()
     }
 
     private fun renderAll() {
         val today = foods.filter { DateUtils.isToday(it.date) }
         val totalCal = today.sumOf { it.calories }
         binding.tvTotalCal.text = "$totalCal"
-        binding.tvPercent.text = "${((totalCal.toFloat() / user.targetCalories) * 100).toInt()}%"
-        binding.progressCal.progress = ((totalCal.toFloat() / user.targetCalories) * 100).coerceIn(0f, 100f).toInt()
+        val calorieProgress =
+            if (user.targetCalories > 0)
+                totalCal.toFloat() / user.targetCalories
+            else
+                0f
+
+        binding.tvPercent.text =
+            "${(calorieProgress * 100).toInt()}%"
+
+        binding.progressCal.progress =
+            (calorieProgress * 100)
+                .coerceIn(0f, 100f)
+                .toInt()
         binding.tvCarbs.text = "${today.sumOf { it.carbs.toDouble() }.toInt()}g"
         binding.tvProtein.text = "${today.sumOf { it.protein.toDouble() }.toInt()}g"
         binding.tvFat.text = "${today.sumOf { it.fat.toDouble() }.toInt()}g"

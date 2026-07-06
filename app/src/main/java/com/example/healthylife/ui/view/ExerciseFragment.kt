@@ -88,7 +88,7 @@ class ExerciseFragment : Fragment() {
     }
 
     private fun loadData() {
-        exercises = repository.getAllExercises().ifEmpty { DummyData.exercises }
+        exercises = repository.getAllExercises()
     }
 
     private fun renderAll() {

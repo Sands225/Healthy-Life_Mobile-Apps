@@ -102,13 +102,28 @@ class SleepFragment : Fragment() {
 
     private fun loadData() {
         repository.getUser(1)?.let { user = it }
-        records = repository.getAllSleepRecords().ifEmpty { DummyData.sleepRecords }
+        records = repository.getAllSleepRecords()
     }
 
     private fun renderAll() {
-        val last = records.firstOrNull { DateUtils.isToday(it.date) } ?: records.firstOrNull() ?: DummyData.lastNightSleep
-        binding.tvLastHours.text = "${last.durationHours.toInt()}"
-        val avg = if (records.isNotEmpty()) records.map { it.durationHours }.average().toFloat() else 8f
+        val last = records.firstOrNull { DateUtils.isToday(it.date) }
+            ?: records.firstOrNull()
+
+        binding.tvLastHours.text =
+            last?.durationHours?.toInt()?.toString() ?: "0"
+
+        val avg =
+        if (records.isNotEmpty())
+            records.map { it.durationHours }.average().toFloat()
+        else
+            0f
+
+        binding.tvAvgHours.text =
+            if (records.isNotEmpty())
+                "${String.format("%.1f", avg)} jam"
+            else
+                "-"
+
         binding.tvAvgHours.text = "${String.format("%.1f", avg)} jam"
         binding.tvTargetHours.text = "${user.targetSleepHours.toInt()} jam"
 
