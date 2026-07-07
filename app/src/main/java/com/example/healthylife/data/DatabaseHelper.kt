@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "healthylife.db"
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8
 
         // Table: users
         const val TABLE_USERS = "users"
@@ -293,6 +293,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             // Skip the snack on some days for realism (not every day has a snack).
             if (day % 5 != 4) {
                 entries.add(toValues(snack[(day + 1) % snack.size], "Makanan Ringan", day))
+            }
+            // Second snack most days, for more variety and more items per day.
+            if (day % 2 == 0) {
+                entries.add(toValues(snack[(day + 6) % snack.size], "Makanan Ringan", day))
+            }
+            // Occasional extra light lunch item (e.g. a side dish) every 3rd day.
+            if (day % 3 == 0) {
+                entries.add(toValues(lunch[(day + 8) % lunch.size], "Makan Siang", day))
             }
         }
         for (food in entries) {
