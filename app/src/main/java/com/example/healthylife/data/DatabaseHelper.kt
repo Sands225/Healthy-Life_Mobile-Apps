@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "healthylife.db"
-        private const val DATABASE_VERSION = 8
+        private const val DATABASE_VERSION = 9
 
         // Table: users
         const val TABLE_USERS = "users"
@@ -186,6 +186,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 })
             }
         }
+
+        // Extra entry for tomorrow (Thursday) — planned workout.
+        entries.add(ContentValues().apply {
+            put(KEY_EXERCISE_NAME, "Running")
+            put(KEY_EXERCISE_EMOJI, "🏃")
+            put(KEY_EXERCISE_DURATION_MINUTES, 30)
+            put(KEY_EXERCISE_CALORIES_BURNED, 270)
+            put(KEY_EXERCISE_DATE, DateUtils.getRelativeDateString(-1))
+        })
+
         for (ex in entries) {
             db.insert(TABLE_EXERCISES, null, ex)
         }
@@ -303,6 +313,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 entries.add(toValues(lunch[(day + 8) % lunch.size], "Makan Siang", day))
             }
         }
+
+        // Extra entries for tomorrow (Thursday) — full day of planned meals.
+        entries.add(toValues(breakfast[0], "Sarapan", -1))
+        entries.add(toValues(lunch[0], "Makan Siang", -1))
+        entries.add(toValues(dinner[0], "Makan Malam", -1))
+        entries.add(toValues(snack[0], "Makanan Ringan", -1))
+
         for (food in entries) {
             db.insert(TABLE_FOODS, null, food)
         }
